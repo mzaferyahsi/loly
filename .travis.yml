@@ -1,7 +1,7 @@
 dist: trusty
 language: csharp
 mono: none
-dotnet: 2.2.106
+dotnet: 2.2
 
 solution: Loly.sln
 
