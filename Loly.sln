@@ -1,0 +1,48 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.26124.0
+MinimumVisualStudioVersion = 15.0.26124.0
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Loly.Agent", "Loly.Agent\Loly.Agent.csproj", "{FE520913-7E9C-492F-BCAD-FE93127C8B8E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Loly.Agent.Tests", "Loly.Agent.Tests\Loly.Agent.Tests.csproj", "{B3D9608C-1322-46F6-908A-E39855C6523F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FE520913-7E9C-492F-BCAD-FE93127C8B8E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE520913-7E9C-492F-BCAD-FE93127C8B8E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE520913-7E9C-492F-BCAD-FE93127C8B8E}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{FE520913-7E9C-492F-BCAD-FE93127C8B8E}.Debug|x64.Build.0 = Debug|Any CPU
+		{FE520913-7E9C-492F-BCAD-FE93127C8B8E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{FE520913-7E9C-492F-BCAD-FE93127C8B8E}.Debug|x86.Build.0 = Debug|Any CPU
+		{FE520913-7E9C-492F-BCAD-FE93127C8B8E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE520913-7E9C-492F-BCAD-FE93127C8B8E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FE520913-7E9C-492F-BCAD-FE93127C8B8E}.Release|x64.ActiveCfg = Release|Any CPU
+		{FE520913-7E9C-492F-BCAD-FE93127C8B8E}.Release|x64.Build.0 = Release|Any CPU
+		{FE520913-7E9C-492F-BCAD-FE93127C8B8E}.Release|x86.ActiveCfg = Release|Any CPU
+		{FE520913-7E9C-492F-BCAD-FE93127C8B8E}.Release|x86.Build.0 = Release|Any CPU
+		{B3D9608C-1322-46F6-908A-E39855C6523F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B3D9608C-1322-46F6-908A-E39855C6523F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B3D9608C-1322-46F6-908A-E39855C6523F}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{B3D9608C-1322-46F6-908A-E39855C6523F}.Debug|x64.Build.0 = Debug|Any CPU
+		{B3D9608C-1322-46F6-908A-E39855C6523F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B3D9608C-1322-46F6-908A-E39855C6523F}.Debug|x86.Build.0 = Debug|Any CPU
+		{B3D9608C-1322-46F6-908A-E39855C6523F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B3D9608C-1322-46F6-908A-E39855C6523F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B3D9608C-1322-46F6-908A-E39855C6523F}.Release|x64.ActiveCfg = Release|Any CPU
+		{B3D9608C-1322-46F6-908A-E39855C6523F}.Release|x64.Build.0 = Release|Any CPU
+		{B3D9608C-1322-46F6-908A-E39855C6523F}.Release|x86.ActiveCfg = Release|Any CPU
+		{B3D9608C-1322-46F6-908A-E39855C6523F}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
