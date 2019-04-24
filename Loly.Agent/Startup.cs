@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using log4net;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -15,6 +17,7 @@ namespace Loly.Agent
 {
     public class Startup
     {
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -29,7 +32,7 @@ namespace Loly.Agent
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
             if (env.IsDevelopment())
             {
@@ -41,8 +44,14 @@ namespace Loly.Agent
                 app.UseHsts();
             }
 
+            loggerFactory.AddLog4Net();
             app.UseHttpsRedirection();
             app.UseMvc();
+            
+            var log = LogManager.GetLogger(typeof(Program));
+            var serverAddressesFeature = app.ServerFeatures.Get<IServerAddressesFeature>();
+            log.InfoFormat("Application started at {0}", string.Join(", ", serverAddressesFeature.Addresses));
+
         }
     }
 }

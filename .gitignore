@@ -328,3 +328,12 @@ ASALocalRun/
 
 # MFractors (Xamarin productivity tool) working folder 
 .mfractor/
+
+# Code Coverage
+coverage.json
+
+# Jetbrains
+.idea
+
+# Mac
+.DS_Store
