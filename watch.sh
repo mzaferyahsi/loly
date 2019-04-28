@@ -1,0 +1,1 @@
+nodemon --exec "dotnet test /p:CollectCoverage=true /p:Include=\"[Loly*]*\" /p:CoverletOutputFormat=\"opencover\" /p:ExcludeByAttribute=\"ExcludeFromCoverageAttribute\" /p:CoverletOutput=\"./lcov\" && cd Loly.Agent.Tests && rm -r coverage && dotnet reportgenerator -reports:lcov.opencover.xml -targetdir:./coverage -assemblyfilters:+Loly.* && cd ../" -e cs
