@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Loly.Agent.Api.Controllers
+namespace Loly.Agent.Api
 {
     [Route("api/[controller]")]
     [ApiController]

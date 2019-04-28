@@ -2,10 +2,13 @@ using Loly.Agent.Models;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
+using Hangfire;
 using log4net;
+using Loly.Agent.Controllers;
+using Loly.Agent.Discovery;
 using Microsoft.AspNetCore.Http;
 
-namespace Loly.Agent.Api.Controllers
+namespace Loly.Agent.Api
 {
 
     [Route("api/[controller]")]
@@ -15,24 +18,25 @@ namespace Loly.Agent.Api.Controllers
     public class DiscoveriesController : LolyControllerBase
     {
         private ILog _log = LogManager.GetLogger(typeof(DiscoveriesController));
-        private Discoveries.DiscoveriesController _discoveriesController;
-
-        public Discoveries.DiscoveriesController Controller => _discoveriesController ?? (_discoveriesController = new Discoveries.DiscoveriesController());
-
+        private IDiscoveryService _discoveryService;
+        public DiscoveriesController(IDiscoveryService service)
+        {
+            this._discoveryService = service;
+        }
 
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
-        public ActionResult Post(Discovery discovery)
+        public ActionResult Post(Models.Discovery discovery)
         {
             try
             {
-                Controller.Discover(discovery);
+                _discoveryService.GetDiscoverTask(discovery.Path).Start();
                 return Created(string.Empty, new { });
             }
             catch (Exception e)
             {
                 _log.Error(e);
-                return InternalServerErrorResult("Unable to create discovery");
+                return InternalServerErrorResult("POSTDISC01", $"Unable to create discovery for path {discovery.Path}", Severity.Error);
             }
             
         }

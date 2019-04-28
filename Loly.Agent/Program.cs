@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Loly.Agent
 {
+    [ExcludeFromCoverageAttribute]
     public class Program
     {
         public static void Main(string[] args)

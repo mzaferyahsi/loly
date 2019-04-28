@@ -331,9 +331,15 @@ ASALocalRun/
 
 # Code Coverage
 coverage.json
+lcov.info
+lcov.opencover.xml
+coverage/
 
 # Jetbrains
 .idea
 
 # Mac
 .DS_Store
+
+# VS Code
+.vscode
