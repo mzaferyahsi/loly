@@ -5,6 +5,6 @@ namespace Loly.Agent.Models
         Info,
         Warning,
         Error,
-        Critical       
+        Critical
     }
 }

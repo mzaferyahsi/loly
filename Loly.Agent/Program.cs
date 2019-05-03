@@ -10,7 +10,6 @@ using Microsoft.Extensions.Logging;
 
 namespace Loly.Agent
 {
-    [ExcludeFromCoverageAttribute]
     public class Program
     {
         public static void Main(string[] args)
@@ -20,6 +19,11 @@ namespace Loly.Agent
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
-                .UseStartup<Startup>();
+                .UseStartup<Startup>()
+                .ConfigureLogging((context, logging) =>
+                {
+                    logging.AddLog4Net();
+                    logging.SetMinimumLevel(LogLevel.Debug);
+                });
     }
 }

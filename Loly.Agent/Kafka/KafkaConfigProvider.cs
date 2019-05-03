@@ -4,12 +4,19 @@ using Microsoft.Extensions.Options;
 
 namespace Loly.Agent.Kafka
 {
-    public class ConfigProvider : IKafkaConfigProducer
+    public interface IKafkaConfigProducer
+    {
+        ConsumerConfig GetConsumerConfig();
+
+        ProducerConfig GetProducerConfig();
+    }
+
+    public class KafkaConfigProvider : IKafkaConfigProducer
     {
         KafkaSettings _settings;
-        private ILog _log = LogManager.GetLogger(typeof(ConfigProvider));
-        
-        public ConfigProvider(IOptions<KafkaSettings> settings)
+        private ILog _log = LogManager.GetLogger(typeof(KafkaConfigProvider));
+
+        public KafkaConfigProvider(IOptions<KafkaSettings> settings)
         {
             _settings = settings.Value;
         }
@@ -19,7 +26,8 @@ namespace Loly.Agent.Kafka
             return new ConsumerConfig()
             {
                 GroupId = _settings.Consumer.GroupId,
-                BootstrapServers = _settings.BootstrapServers
+                BootstrapServers = _settings.BootstrapServers,
+                AutoOffsetReset = AutoOffsetReset.Earliest
             };
         }
 

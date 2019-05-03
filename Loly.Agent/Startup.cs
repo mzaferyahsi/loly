@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using Confluent.Kafka;
 using Hangfire;
 using log4net;
+using Loly.Agent.Analysers;
+using Loly.Agent.Discoveries;
 using Loly.Agent.Discovery;
 using Loly.Agent.Kafka;
 using Microsoft.AspNetCore.Builder;
@@ -20,10 +22,8 @@ using Newtonsoft.Json.Serialization;
 
 namespace Loly.Agent
 {
-    [ExcludeFromCoverage]
     public class Startup
     {
-
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -38,10 +38,12 @@ namespace Loly.Agent
                 .SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
                 .AddJsonOptions(options =>
                 {
-                    var enumConverter = new Newtonsoft.Json.Converters.StringEnumConverter() { NamingStrategy = new CamelCaseNamingStrategy()};
+                    var enumConverter = new Newtonsoft.Json.Converters.StringEnumConverter()
+                        {NamingStrategy = new CamelCaseNamingStrategy()};
                     options.SerializerSettings.Converters.Add(enumConverter);
                     options.SerializerSettings.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore;
-                });;
+                });
+            ;
             services.AddHangfire(configuration => configuration
                 .UseLog4NetLogProvider());
 
@@ -49,13 +51,14 @@ namespace Loly.Agent
 
             services.AddOptions();
             services.Configure<KafkaSettings>(Configuration.GetSection("Kafka"));
-            services.AddTransient<IKafkaConfigProducer, ConfigProvider>();
+            services.AddTransient<IKafkaConfigProducer, KafkaConfigProvider>();
             services.AddSingleton<IKafkaProducerHostedService, KafkaProducerHostedService>();
-
+            services.AddSingleton<IKafkaConsumerProvider, KafkaConsumerProvider>();
+            services.AddHostedService<FileAnalyserHostedService>();
+            services.AddSingleton<FileAnalyser>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        [ExcludeFromCoverageAttribute]
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
             if (env.IsDevelopment())
@@ -71,11 +74,10 @@ namespace Loly.Agent
             loggerFactory.AddLog4Net();
             app.UseHttpsRedirection();
             app.UseMvc();
-            
+
             var log = LogManager.GetLogger(typeof(Program));
             var serverAddressesFeature = app.ServerFeatures.Get<IServerAddressesFeature>();
             log.InfoFormat("Application started at {0}", string.Join(", ", serverAddressesFeature.Addresses));
-
         }
     }
 }

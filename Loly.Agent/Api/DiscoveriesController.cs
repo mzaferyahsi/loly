@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.Http;
 
 namespace Loly.Agent.Api
 {
-
     [Route("api/[controller]")]
     [ApiController]
     [Consumes("application/json")]
@@ -19,6 +18,7 @@ namespace Loly.Agent.Api
     {
         private ILog _log = LogManager.GetLogger(typeof(DiscoveriesController));
         private IDiscoveryService _discoveryService;
+
         public DiscoveriesController(IDiscoveryService service)
         {
             this._discoveryService = service;
@@ -36,9 +36,9 @@ namespace Loly.Agent.Api
             catch (Exception e)
             {
                 _log.Error(e);
-                return InternalServerErrorResult("POSTDISC01", $"Unable to create discovery for path {discovery.Path}", Severity.Error);
+                return InternalServerErrorResult("POSTDISC01", $"Unable to create discovery for path {discovery.Path}",
+                    Severity.Error);
             }
-            
         }
     }
 }

@@ -4,6 +4,6 @@ namespace Loly.Agent.Models
     {
         public string Code { get; set; }
         public string Message { get; set; }
-        public Severity Severity { get; set; }    
+        public Severity Severity { get; set; }
     }
 }

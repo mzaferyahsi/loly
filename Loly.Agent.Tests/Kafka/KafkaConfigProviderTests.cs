@@ -4,7 +4,7 @@ using Xunit;
 
 namespace Loly.Agent.Tests.Kafka
 {
-    public class ConfigProviderTests
+    public class KafkaConfigProviderTests
     {
         [Fact]
         public void ConstructorTest()
@@ -17,8 +17,8 @@ namespace Loly.Agent.Tests.Kafka
                     GroupId = "loly-agent"
                 }
             });
-            
-            var configProvider = new ConfigProvider(configOptions);
+
+            var configProvider = new KafkaConfigProvider(configOptions);
         }
 
         [Fact]
@@ -32,14 +32,14 @@ namespace Loly.Agent.Tests.Kafka
                     GroupId = "loly-agent"
                 }
             });
-            
-            var configProvider = new ConfigProvider(configOptions);
+
+            var configProvider = new KafkaConfigProvider(configOptions);
             var consumerconfig = configProvider.GetConsumerConfig();
-            
+
             Assert.Equal("localhost:9092", consumerconfig.BootstrapServers);
             Assert.Equal("loly-agent", consumerconfig.GroupId);
         }
-        
+
         [Fact]
         public void GetProducerConfigTest()
         {
@@ -51,10 +51,10 @@ namespace Loly.Agent.Tests.Kafka
                     GroupId = "loly-agent"
                 }
             });
-            
-            var configProvider = new ConfigProvider(configOptions);
+
+            var configProvider = new KafkaConfigProvider(configOptions);
             var producerConfig = configProvider.GetProducerConfig();
-            
+
             Assert.Equal("localhost:9092", producerConfig.BootstrapServers);
         }
     }

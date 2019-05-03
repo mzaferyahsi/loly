@@ -6,15 +6,22 @@ using Confluent.Kafka;
 using Hangfire.States;
 using log4net;
 using Loly.Agent.Models;
+using Microsoft.AspNetCore.Mvc.TagHelpers.Cache;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
+using Error = Confluent.Kafka.Error;
 
 namespace Loly.Agent.Kafka
 {
+    public interface IKafkaProducerHostedService : IHostedService
+    {
+        void AddMessage(KafkaMessage message);
+    }
+
     public class KafkaProducerHostedService : IKafkaProducerHostedService, IDisposable
     {
-        private readonly ILog _log = LogManager.GetLogger(typeof(KafkaProducerHostedService));
+        protected readonly ILog _log = LogManager.GetLogger(typeof(KafkaProducerHostedService));
 
         private Queue<KafkaMessage> _queue = new Queue<KafkaMessage>();
         private IKafkaConfigProducer _configProducer;
@@ -29,9 +36,9 @@ namespace Loly.Agent.Kafka
 
         private void Schedule()
         {
-            if(_timer != null)
+            if (_timer != null)
                 UnSchedule();
-            
+
             _log.Info("Scheduling producer.");
             _timer = new Timer(Publish, null, TimeSpan.Zero, TimeSpan.FromSeconds(5));
             _log.Info("Producer scheduled.");
@@ -49,7 +56,51 @@ namespace Loly.Agent.Kafka
 
         protected virtual IProducer<Null, string> GetProducer()
         {
-            return new ProducerBuilder<Null, string>(_configProducer.GetProducerConfig()).Build();
+            var producerBuilder = new ProducerBuilder<Null, string>(_configProducer.GetProducerConfig());
+            producerBuilder.SetLogHandler(LogHandler);
+            producerBuilder.SetErrorHandler(ErrorHandler);
+            return producerBuilder.Build();
+        }
+
+        protected virtual void ErrorHandler(IProducer<Null, string> producer, Error error)
+        {
+            if (error.IsFatal)
+            {
+                _log.Fatal(error.Reason);
+                this.StopAsync(CancellationToken.None);
+            }
+            else if (error.IsError)
+            {
+                _log.Error(error.Reason);
+                this.StopAsync(CancellationToken.None);
+            }
+        }
+
+        protected virtual void LogHandler(IProducer<Null, string> producer, LogMessage logMessage)
+        {
+            switch (logMessage.Level)
+            {
+                case SyslogLevel.Info:
+                    _log.Info(logMessage.Message);
+                    break;
+                case SyslogLevel.Alert:
+                case SyslogLevel.Warning:
+                    _log.Warn(logMessage.Message);
+                    break;
+                case SyslogLevel.Debug:
+                    _log.Debug(logMessage.Message);
+                    break;
+                case SyslogLevel.Error:
+                    _log.Error(logMessage.Message);
+                    break;
+                case SyslogLevel.Critical:
+                case SyslogLevel.Emergency:
+                    _log.Fatal(logMessage.Message);
+                    break;
+                default:
+                    _log.Info(logMessage.Message);
+                    break;
+            }
         }
 
         protected async void Publish()
@@ -63,10 +114,10 @@ namespace Loly.Agent.Kafka
 
                 using (var p = GetProducer())
                 {
-                    while (_queue.Peek() != null && _isEnabled)
+                    while (_queue.Count > 0 && _isEnabled)
                     {
                         var message = _queue.Dequeue();
-                    
+
                         try
                         {
                             var dr = await p.ProduceAsync(message.Topic,
@@ -94,12 +145,11 @@ namespace Loly.Agent.Kafka
         private void UnSchedule()
         {
             _log.Info("Un-scheduling producer.");
-            if(_timer != null)
+            if (_timer != null)
                 _timer.Change(Timeout.Infinite, 0);
 
             _timer = null;
             _log.Info("Producer un-scheduled.");
-            
         }
 
         public Task StartAsync(CancellationToken cancellationToken)

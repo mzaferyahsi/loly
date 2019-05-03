@@ -14,7 +14,6 @@ namespace Loly.Agent.Tests.Api
 {
     public class DiscoveriesControllerTests
     {
-        
         [Fact]
         public void PostTest()
         {
@@ -35,7 +34,7 @@ namespace Loly.Agent.Tests.Api
             var discovery = new Models.Discovery() {Path = "./"};
             var mock = new Mock<IDiscoveryService>();
             mock.Setup(x => x.GetDiscoverTask("./")).Throws(new Exception("Error!"));
-            
+
             var controller = new DiscoveriesController(mock.Object);
             var result = controller.Post(discovery);
             Assert.IsType<InternalServerErrorResult>(result);
