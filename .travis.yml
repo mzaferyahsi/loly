@@ -13,4 +13,5 @@ install:
 #  - nuget install xunit.runners -Version 1.9.2 -OutputDirectory testrunner
 
 script:
+  - touch ~/found.txt
   - dotnet build && ./test.sh && ./build-and-push-docker.sh
