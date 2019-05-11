@@ -24,7 +24,7 @@ namespace Loly.Agent.Tests.Discoveries
             var mock = Mock.Of<IKafkaProducerHostedService>(x =>
                 x.StartAsync(It.IsAny<CancellationToken>()) == Task.CompletedTask);
             var controller = new DiscoveryService(mock);
-            controller.Discover("~/.DS_Store");
+            controller.Discover("~/");
         }
 
         [Fact]
