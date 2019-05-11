@@ -5,10 +5,12 @@ dotnet: 2.2
 
 solution: Loly.sln
 
+before_install:
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+
 install:
   - dotnet restore
 #  - nuget install xunit.runners -Version 1.9.2 -OutputDirectory testrunner
 
 script:
-  - dotnet build
-  - ./test.sh
+  - dotnet build && ./test.sh && ./build-and-publish-docker.sh
