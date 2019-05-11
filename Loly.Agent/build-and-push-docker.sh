@@ -1,4 +1,4 @@
-export APP_NAME=loly
+export APP_NAME=loly-agent
 export APP_VERSION=$(date '+%Y%m%d%H%M%S')
 
 docker build -t ${APP_NAME}:${APP_VERSION} .
