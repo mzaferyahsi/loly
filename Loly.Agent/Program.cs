@@ -22,7 +22,7 @@ namespace Loly.Agent
                 .UseStartup<Startup>()
                 .ConfigureLogging((context, logging) =>
                 {
-                    logging.AddLog4Net();
+                    logging.AddLog4Net("Configs/log4net.config");
                     logging.SetMinimumLevel(LogLevel.Debug);
                 });
     }

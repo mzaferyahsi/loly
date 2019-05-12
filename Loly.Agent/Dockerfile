@@ -14,4 +14,8 @@ RUN dotnet publish -c Release -o out
 FROM mcr.microsoft.com/dotnet/core/aspnet:2.2 AS runtime
 WORKDIR /app
 COPY --from=build /app/loly-agent/out ./
+RUN rm ./*.Development.json
+
+VOLUME [ "/app/Configs" ]
+EXPOSE 80
 ENTRYPOINT ["dotnet", "Loly.Agent.dll"]

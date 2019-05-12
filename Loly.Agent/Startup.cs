@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Confluent.Kafka;
@@ -24,9 +25,16 @@ namespace Loly.Agent
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        public Startup(IHostingEnvironment env)
         {
-            Configuration = configuration;
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(env.ContentRootPath)
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
+                .AddJsonFile("Configs/loly.json", optional: true, reloadOnChange: true)
+                .AddEnvironmentVariables();
+
+            Configuration = builder.Build();
         }
 
         public IConfiguration Configuration { get; }
@@ -50,6 +58,7 @@ namespace Loly.Agent
             services.AddTransient<IDiscoveryService, DiscoveryService>();
 
             services.AddOptions();
+            
             services.Configure<KafkaSettings>(Configuration.GetSection("Kafka"));
             services.AddTransient<IKafkaConfigProducer, KafkaConfigProvider>();
             services.AddSingleton<IKafkaProducerHostedService, KafkaProducerHostedService>();

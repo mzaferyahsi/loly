@@ -30,7 +30,10 @@
 
     <ItemGroup>
       <Content Remove="Discover\**" />
-      <Content Update="log4net.config">
+      <Content Update="Configs\loly.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+      <Content Update="Configs\log4net.config">
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>
