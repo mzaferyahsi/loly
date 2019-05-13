@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Confluent.Kafka;
 using Hangfire;
+using HeyRed.Mime;
 using log4net;
 using Loly.Agent.Analysers;
 using Loly.Agent.Discoveries;
@@ -87,6 +89,43 @@ namespace Loly.Agent
             var log = LogManager.GetLogger(typeof(Program));
             var serverAddressesFeature = app.ServerFeatures.Get<IServerAddressesFeature>();
             log.InfoFormat("Application started at {0}", string.Join(", ", serverAddressesFeature.Addresses));
+
+            try
+            {
+                var isDockerEnv = Environment.GetEnvironmentVariable("IS_DOCKER");
+                if (Boolean.Parse(isDockerEnv))
+                {
+                    var osPath = string.Empty;
+                    if (OperatingSystem.IsLinux())
+                        osPath = "linux-x64";
+                    else if (OperatingSystem.IsWindows())
+                        osPath = RuntimeInformation.ProcessArchitecture == Architecture.X86 ? "win-x86" : "win-x64";
+                    else if (OperatingSystem.IsMacOS())
+                        osPath = "osx-x64";
+
+                    var path = Path.Join(Directory.GetCurrentDirectory(), "runtimes");
+                    path = Path.Join(path, osPath, "native");
+                    path = Path.Join(path, "magic.mgc");
+
+                    MimeGuesser.MagicFilePath = path;
+                }
+            }
+            catch (ArgumentNullException e)
+            {
+                
+            }         
         }
+    }
+    
+    public static class OperatingSystem
+    {
+        public static bool IsWindows() =>
+            RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+
+        public static bool IsMacOS() =>
+            RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+
+        public static bool IsLinux() =>
+            RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
     }
 }
