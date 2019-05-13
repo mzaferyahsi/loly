@@ -7,6 +7,7 @@ using Loly.Agent.Kafka;
 using Loly.Agent.Models;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Error = Confluent.Kafka.Error;
 
 namespace Loly.Agent.Analysers
@@ -139,10 +140,11 @@ namespace Loly.Agent.Analysers
 
         private void ProduceMessage(FileInformation fileInfo)
         {
+            var serializedMessage = JToken.Parse(JsonConvert.SerializeObject(fileInfo)).ToString();
             var message = new KafkaMessage
             {
                 Topic = "loly-files",
-                Message = JsonConvert.SerializeObject(fileInfo)
+                Message = serializedMessage
             };
             _kafkaProducerHostedService.AddMessage(message);
             _kafkaProducerHostedService.StartAsync(CancellationToken.None);
