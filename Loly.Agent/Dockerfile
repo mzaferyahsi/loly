@@ -4,7 +4,7 @@ WORKDIR /app
 # copy csproj and restore as distinct layers
 COPY *.csproj ./loly-agent/
 WORKDIR /app/loly-agent
-RUN dotnet restore
+RUN dotnet clean && dotnet restore
 
 # copy everything else and build app
 COPY . ./
