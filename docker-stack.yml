@@ -1,0 +1,29 @@
+version: '3.7'
+
+services:
+  agent:
+    image: mzaferyahsi/loly-agent:latest
+    ports:
+      - '9080:80'
+    configs:
+      - source: loly_agent_config
+        target: /app/Config/loly.json
+      - source: loly_agent_log4net_config
+        target: /app/Config/log4net.config
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          memory: 1536M
+     placement:
+       constraints:
+         - node.labels.disk == ssd
+      restart_policy:
+        condition: on-failure
+
+configs:
+  loly_agent_config:
+    external: true
+  loly_agent_log4net_config:
+    external: true
