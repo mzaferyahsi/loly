@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Xunit;
 using Moq;
+using System.Threading;
 
 namespace Loly.Agent.Tests.Api
 {
@@ -18,20 +19,21 @@ namespace Loly.Agent.Tests.Api
         public void PostTest()
         {
             var taskExecuted = false;
-            var discovery = new Models.Discovery() {Path = "./"};
+            var discovery = new Models.Discovery() { Path = "./" };
             var task = new Task((() => { taskExecuted = true; }));
             var mock = Mock.Of<IDiscoveryService>(l => l.GetDiscoverTask("./") == task);
 
             var controller = new DiscoveriesController(mock);
             var result = controller.Post(discovery);
             Assert.IsType<CreatedResult>(result);
+            Thread.Sleep(50);
             Assert.True(taskExecuted);
         }
 
         [Fact]
         public void PostFailTest()
         {
-            var discovery = new Models.Discovery() {Path = "./"};
+            var discovery = new Models.Discovery() { Path = "./" };
             var mock = new Mock<IDiscoveryService>();
             mock.Setup(x => x.GetDiscoverTask("./")).Throws(new Exception("Error!"));
 
