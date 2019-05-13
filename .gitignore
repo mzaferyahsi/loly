@@ -346,3 +346,5 @@ coverage/
 
 
 logs/*
+
+*.local.yml
