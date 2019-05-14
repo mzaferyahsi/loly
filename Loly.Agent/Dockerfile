@@ -15,7 +15,7 @@ FROM mcr.microsoft.com/dotnet/core/aspnet:2.2 AS runtime
 WORKDIR /app
 COPY --from=build /app/loly-agent/out ./
 RUN rm ./*.Development.json
-RUN apt-get update && apt-get install apt-utils -y && apt-get install libmagic1 -y
+# RUN apt-get update && apt-get install apt-utils -y && apt-get install libmagic1 -y
 ENV IS_DOCKER=true
 
 VOLUME [ "/app/Configs" ]
