@@ -140,11 +140,10 @@ namespace Loly.Agent.Analysers
 
         private void ProduceMessage(FileInformation fileInfo)
         {
-            var serializedMessage = JToken.Parse(JsonConvert.SerializeObject(fileInfo)).ToString();
             var message = new KafkaMessage
             {
                 Topic = "loly-files",
-                Message = serializedMessage
+                Message = fileInfo
             };
             _kafkaProducerHostedService.AddMessage(message);
             _kafkaProducerHostedService.StartAsync(CancellationToken.None);

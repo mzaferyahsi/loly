@@ -82,7 +82,7 @@ namespace Loly.Agent
                 app.UseHsts();
             }
 
-            loggerFactory.AddLog4Net();
+            loggerFactory.AddLog4Net("Configs/log4net.config");
             app.UseHttpsRedirection();
             app.UseMvc();
 

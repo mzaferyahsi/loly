@@ -121,7 +121,10 @@ namespace Loly.Agent.Kafka
                         try
                         {
                             var dr = await p.ProduceAsync(message.Topic,
-                                new Message<Null, string> {Value = JsonConvert.SerializeObject(message.Message)});
+                                new Message<Null, string>
+                                {
+                                    Value = message.Message.GetType() != typeof(string)? JsonConvert.SerializeObject(message.Message) : (string)message.Message
+                                });
                             _log.Debug($"Delivered {dr.Value} to {dr.TopicPartitionOffset}");
                         }
                         catch (ProduceException<Null, string> e)
