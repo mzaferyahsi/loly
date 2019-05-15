@@ -28,6 +28,7 @@ namespace Loly.Agent.Analysers
             _consumerProvider = consumerProvider;
             _analyser = analyser;
             _kafkaProducerHostedService = kafkaProducerHostedService;
+            _kafkaProducerHostedService.StartAsync(CancellationToken.None);
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -147,6 +148,7 @@ namespace Loly.Agent.Analysers
             };
             _kafkaProducerHostedService.AddMessage(message);
             _kafkaProducerHostedService.StartAsync(CancellationToken.None);
+            _kafkaProducerHostedService.Publish();
         }
     }
 }

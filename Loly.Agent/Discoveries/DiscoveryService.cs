@@ -19,6 +19,8 @@ namespace Loly.Agent.Discoveries
         public DiscoveryService(IKafkaProducerHostedService kafkaProducerHostedService)
         {
             _kafkaProducerHostedService = kafkaProducerHostedService;
+            _kafkaProducerHostedService.StartAsync(CancellationToken.None);
+
         }
 
         public virtual Task GetDiscoverTask(string path)
@@ -69,6 +71,7 @@ namespace Loly.Agent.Discoveries
 
             _kafkaProducerHostedService.AddMessage(message);
             _kafkaProducerHostedService.StartAsync(CancellationToken.None);
+            _kafkaProducerHostedService.Publish();
         }
 
         private void DiscoverDirectory(string path)

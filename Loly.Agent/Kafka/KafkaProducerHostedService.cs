@@ -17,6 +17,7 @@ namespace Loly.Agent.Kafka
     public interface IKafkaProducerHostedService : IHostedService
     {
         void AddMessage(KafkaMessage message);
+        void Publish();
     }
 
     public class KafkaProducerHostedService : IKafkaProducerHostedService, IDisposable
@@ -37,7 +38,7 @@ namespace Loly.Agent.Kafka
         private void Schedule()
         {
             if (_timer != null)
-                UnSchedule();
+                return;
 
             _log.Info("Scheduling producer.");
             _timer = new Timer(Publish, null, TimeSpan.Zero, TimeSpan.FromSeconds(5));
@@ -103,7 +104,7 @@ namespace Loly.Agent.Kafka
             }
         }
 
-        protected async void Publish()
+        public async void Publish()
         {
             if (_queue.Count < 1 || _isPublishing)
                 return;
@@ -120,12 +121,11 @@ namespace Loly.Agent.Kafka
 
                         try
                         {
-                            var dr = await p.ProduceAsync(message.Topic,
+                            p.ProduceAsync(message.Topic,
                                 new Message<Null, string>
                                 {
                                     Value = message.Message.GetType() != typeof(string)? JsonConvert.SerializeObject(message.Message) : (string)message.Message
                                 });
-                            _log.Debug($"Delivered {dr.Value} to {dr.TopicPartitionOffset}");
                         }
                         catch (ProduceException<Null, string> e)
                         {
