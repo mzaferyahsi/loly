@@ -15,20 +15,19 @@ namespace Loly.Agent.Analysers
     public class FileAnalyserHostedService : IHostedService
     {
         private readonly IKafkaConsumerProvider _consumerProvider;
-        private readonly IKafkaProducerHostedService _kafkaProducerHostedService;
         private readonly ILog _log = LogManager.GetLogger(typeof(FileAnalyserHostedService));
         private readonly FileAnalyser _analyser;
+        private readonly IKafkaProducerQueue _kafkaProducerQueue;
         private CancellationTokenSource _cancellationTokenSource;
         private IConsumer<Ignore, string> _consumer;
         private Task _consumeTask;
 
-        public FileAnalyserHostedService(IKafkaProducerHostedService kafkaProducerHostedService,
+        public FileAnalyserHostedService(IKafkaProducerQueue kafkaProducerQueue,
             IKafkaConsumerProvider consumerProvider, FileAnalyser analyser)
         {
             _consumerProvider = consumerProvider;
             _analyser = analyser;
-            _kafkaProducerHostedService = kafkaProducerHostedService;
-            _kafkaProducerHostedService.StartAsync(CancellationToken.None);
+            _kafkaProducerQueue = kafkaProducerQueue;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -88,41 +87,41 @@ namespace Loly.Agent.Analysers
 
         private void InitializeConsumer()
         {
-            _log.Info("Initializing kafka consumer for file analyser.");
-            if (_consumer != null)
-            {
-                _log.Warn("There's already an initialized kafka consumer for file analyser.");
-                DeInitializeConsumer();
-            }
-
-            _consumer = _consumerProvider.GetConsumer<Ignore, string>(LogHandler, ErrorHandler);
-            _consumer.Subscribe("loly-discovered");
-            _cancellationTokenSource = new CancellationTokenSource();
-            _consumeTask = Task.Run(async () => 
-            {
-                if (_consumer == null)
-                    throw new NullReferenceException("Consumer is not initialized.");
-    
-                while (!_cancellationTokenSource.IsCancellationRequested)
+                _log.Debug("Initializing kafka consumer for file analyser.");
+                if (_consumer != null)
                 {
-                    var cr = _consumer.Consume(CancellationToken.None);
-                    _log.Debug($"Received {cr.Value} for analyse.");
-                    var fileInfo = await _analyser.Analyse(cr.Value);
-                    _log.Debug($"Analyse result as {JsonConvert.SerializeObject(fileInfo)}");
-    
-                    if (fileInfo != null)
-                        ProduceMessage(fileInfo);
-                    else
-                        _log.Warn($"Unable to analyse {cr.Value}");
+                    _log.Warn("There's already an initialized kafka consumer for file analyser.");
+                    DeInitializeConsumer();
                 }
-            }, _cancellationTokenSource.Token);
+
+                _consumer = _consumerProvider.GetConsumer<Ignore, string>(LogHandler, ErrorHandler);
+                _consumer.Subscribe("loly-discovered");
+                _cancellationTokenSource = new CancellationTokenSource();
+                _consumeTask = Task.Run(async () => 
+                {
+                    if (_consumer == null)
+                        throw new NullReferenceException("Consumer is not initialized.");
+    
+                    while (!_cancellationTokenSource.IsCancellationRequested)
+                    {
+                        var cr = _consumer.Consume(CancellationToken.None);
+                        _log.Debug($"Received {cr.Value} for analyse.");
+                        var fileInfo = await _analyser.Analyse(cr.Value);
+                        _log.Debug($"Analyse result as {JsonConvert.SerializeObject(fileInfo)}");
+    
+                        if (fileInfo != null)
+                            ProduceMessage(fileInfo);
+                        else
+                            _log.Warn($"Unable to analyse {cr.Value}");
+                    }
+                }, _cancellationTokenSource.Token);
             
-            _log.Info("Initialized kafka consumer for file analyser.");
+                _log.Debug("Initialized kafka consumer for file analyser.");
         }
 
         private void DeInitializeConsumer()
         {
-            _log.Info("De-initializing kafka consumer for file analyser.");
+            _log.Debug("De-initializing kafka consumer for file analyser.");
             if (_consumer != null)
             {
                 _consumer.Close();
@@ -135,8 +134,6 @@ namespace Loly.Agent.Analysers
                 _consumeTask = null;
                 _cancellationTokenSource = null;
             }
-
-            _log.Info("De-initialized kafka consumer for file analyser.");
         }
 
         private void ProduceMessage(FileInformation fileInfo)
@@ -146,9 +143,7 @@ namespace Loly.Agent.Analysers
                 Topic = "loly-files",
                 Message = fileInfo
             };
-            _kafkaProducerHostedService.AddMessage(message);
-            _kafkaProducerHostedService.StartAsync(CancellationToken.None);
-            _kafkaProducerHostedService.Publish();
+            _kafkaProducerQueue.Enqueue(message);
         }
     }
 }

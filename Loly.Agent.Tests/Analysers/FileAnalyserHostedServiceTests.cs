@@ -21,7 +21,9 @@ namespace Loly.Agent.Tests.Analysers
             } && x.GetProducerConfig() == new ProducerConfig());            
             var mockedConsumer = Mock.Of<IConsumer<Ignore, string>>();
             var mockedConsumerProvider = Mock.Of<IKafkaConsumerProvider>(x => x.GetConsumer<Ignore, string>() == mockedConsumer);
-            var fileAnalyserHostedService = new FileAnalyserHostedService(new MockKafkaProducerHostedService(mockedKafkaConfigProducer), mockedConsumerProvider,
+            var queue = new KafkaProducerQueue();
+
+            var fileAnalyserHostedService = new FileAnalyserHostedService(queue, mockedConsumerProvider,
                 new FileAnalyser());
         }
         
@@ -56,7 +58,8 @@ namespace Loly.Agent.Tests.Analysers
                     errorAction = error;
                 })
                 .Returns(mockedConsumer);
-            var fileAnalyserHostedService = new FileAnalyserHostedService(new MockKafkaProducerHostedService(mockedKafkaConfigProducer), mockedConsumerProvider.Object,
+            var queue = new KafkaProducerQueue();
+            var fileAnalyserHostedService = new FileAnalyserHostedService(queue, mockedConsumerProvider.Object,
                 new FileAnalyser());
 
             fileAnalyserHostedService.StartAsync(CancellationToken.None);
@@ -95,7 +98,8 @@ namespace Loly.Agent.Tests.Analysers
                     errorAction = error;
                 })
                 .Returns(mockedConsumer);
-            var fileAnalyserHostedService = new FileAnalyserHostedService(new MockKafkaProducerHostedService(mockedKafkaConfigProducer), mockedConsumerProvider.Object,
+            var queue = new KafkaProducerQueue();
+            var fileAnalyserHostedService = new FileAnalyserHostedService(queue, mockedConsumerProvider.Object,
                 new FileAnalyser());
 
             fileAnalyserHostedService.StartAsync(CancellationToken.None);
@@ -141,7 +145,9 @@ namespace Loly.Agent.Tests.Analysers
                     errorAction = error;
                 })
                 .Returns(mockedConsumer);
-            var fileAnalyserHostedService = new FileAnalyserHostedService(new MockKafkaProducerHostedService(mockedKafkaConfigProducer), mockedConsumerProvider.Object,
+            var queue = new KafkaProducerQueue();
+
+            var fileAnalyserHostedService = new FileAnalyserHostedService(queue, mockedConsumerProvider.Object,
                 new FileAnalyser());
 
             fileAnalyserHostedService.StartAsync(CancellationToken.None);

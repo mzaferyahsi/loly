@@ -12,36 +12,32 @@ namespace Loly.Agent.Tests.Discoveries
         [Fact]
         public void DiscoverTest()
         {
-            var mock = Mock.Of<IKafkaProducerHostedService>(x =>
-                x.StartAsync(It.IsAny<CancellationToken>()) == Task.CompletedTask);
-            var controller = new DiscoveryService(mock);
+            var queue = new KafkaProducerQueue();
+            var controller = new DiscoveryService(queue);
             controller.Discover("./");
         }
         
         [Fact]
         public void DiscoverHomePathTest()
         {
-            var mock = Mock.Of<IKafkaProducerHostedService>(x =>
-                x.StartAsync(It.IsAny<CancellationToken>()) == Task.CompletedTask);
-            var controller = new DiscoveryService(mock);
+            var queue = new KafkaProducerQueue();
+            var controller = new DiscoveryService(queue);
             controller.Discover("~/found.txt");
         }
 
         [Fact]
         public void DiscoverFileNotFoundTest()
         {
-            var mock = Mock.Of<IKafkaProducerHostedService>(x =>
-                x.StartAsync(It.IsAny<CancellationToken>()) == Task.CompletedTask);
-            var controller = new DiscoveryService(mock);
+            var queue = new KafkaProducerQueue();
+            var controller = new DiscoveryService(queue);
             controller.Discover("./.notfound");
         }
         
         [Fact]
         public void GetDiscoverTaskTest()
         {
-            var mock = Mock.Of<IKafkaProducerHostedService>(x =>
-                x.StartAsync(It.IsAny<CancellationToken>()) == Task.CompletedTask);
-            var controller = new DiscoveryService(mock);
+            var queue = new KafkaProducerQueue();
+            var controller = new DiscoveryService(queue);
             var task = controller.GetDiscoverTask("./");
             Assert.IsType<Task>(task);
             task.Start();

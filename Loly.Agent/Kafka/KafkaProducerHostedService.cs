@@ -16,23 +16,21 @@ namespace Loly.Agent.Kafka
 {
     public interface IKafkaProducerHostedService : IHostedService
     {
-        void AddMessage(KafkaMessage message);
-        void Publish();
     }
 
     public class KafkaProducerHostedService : IKafkaProducerHostedService, IDisposable
     {
         protected readonly ILog _log = LogManager.GetLogger(typeof(KafkaProducerHostedService));
-
-        private Queue<KafkaMessage> _queue = new Queue<KafkaMessage>();
-        private IKafkaConfigProducer _configProducer;
-        private bool _isEnabled = false;
-        private bool _isPublishing = false;
+        private readonly IKafkaConfigProducer _configProducer;
+        private readonly IKafkaProducerQueue _queue;
         private Timer _timer;
+        private Thread _thread;
+        private bool _isPublishing = false;
 
-        public KafkaProducerHostedService(IKafkaConfigProducer configProducer)
+        public KafkaProducerHostedService(IKafkaConfigProducer configProducer, IKafkaProducerQueue queue)
         {
             _configProducer = configProducer;
+            _queue = queue;
         }
 
         private void Schedule()
@@ -40,19 +38,17 @@ namespace Loly.Agent.Kafka
             if (_timer != null)
                 return;
 
-            _log.Info("Scheduling producer.");
-            _timer = new Timer(Publish, null, TimeSpan.Zero, TimeSpan.FromSeconds(5));
-            _log.Info("Producer scheduled.");
-        }
-
-        public void AddMessage(KafkaMessage message)
-        {
-            _queue.Enqueue(message);
-        }
-
-        private void Publish(object state)
-        {
-            Publish();
+            _thread = new Thread(() =>
+            {
+                _log.Debug("Scheduling producer.");
+                _timer = new Timer((state) =>
+                {
+                    Publish();
+                }, null, TimeSpan.Zero, TimeSpan.FromSeconds(5));
+                _log.Debug("Producer scheduled.");
+                
+            });
+            _thread.Start();
         }
 
         protected virtual IProducer<Null, string> GetProducer()
@@ -73,7 +69,7 @@ namespace Loly.Agent.Kafka
             else if (error.IsError)
             {
                 _log.Error(error.Reason);
-                this.StopAsync(CancellationToken.None);
+//                this.StopAsync(CancellationToken.None);
             }
         }
 
@@ -104,35 +100,47 @@ namespace Loly.Agent.Kafka
             }
         }
 
-        public async void Publish()
+        protected async void Publish()
         {
-            if (_queue.Count < 1 || _isPublishing)
+            if(_isPublishing)
+                return;
+
+            var hasMessage = _queue.TryPeek(out var message);
+            
+            if (!hasMessage)
                 return;
 
             try
             {
                 _isPublishing = true;
-
                 using (var p = GetProducer())
                 {
-                    while (_queue.Count > 0 && _isEnabled)
+                    do
                     {
-                        var message = _queue.Dequeue();
+                        var dequeueResult = _queue.TryDequeue(out message);
+                        if (!dequeueResult)
+                        {
+                            hasMessage = false;
+                            break;
+                        }
 
                         try
                         {
-                            p.ProduceAsync(message.Topic,
+                            await p.ProduceAsync(message.Topic,
                                 new Message<Null, string>
                                 {
-                                    Value = message.Message.GetType() != typeof(string)? JsonConvert.SerializeObject(message.Message) : (string)message.Message
+                                    Value = message.Message.GetType() != typeof(string)
+                                        ? JsonConvert.SerializeObject(message.Message)
+                                        : (string) message.Message
                                 });
+
                         }
                         catch (ProduceException<Null, string> e)
                         {
                             _log.Error($"Failed to deliver message: {e.Error.Reason}");
-                            //_queue.Enqueue(message);
                         }
-                    }
+                    } while (_queue.TryPeek(out message));
+
                 }
             }
             catch (Exception e)
@@ -143,21 +151,26 @@ namespace Loly.Agent.Kafka
             {
                 _isPublishing = false;
             }
+
         }
 
         private void UnSchedule()
         {
-            _log.Info("Un-scheduling producer.");
-            if (_timer != null)
-                _timer.Change(Timeout.Infinite, 0);
+            
+            _log.Debug("Un-scheduling producer.");
+            _timer?.Change(Timeout.Infinite, 0);
+            if (_thread != null && _thread.IsAlive)
+            {
+                _thread.Abort();
+            }
 
             _timer = null;
-            _log.Info("Producer un-scheduled.");
+            _thread = null;
+            _log.Debug("Producer un-scheduled.");
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            _isEnabled = true;
             Schedule();
             return Task.CompletedTask;
         }
@@ -165,7 +178,6 @@ namespace Loly.Agent.Kafka
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            _isEnabled = false;
             UnSchedule();
             return Task.CompletedTask;
         }

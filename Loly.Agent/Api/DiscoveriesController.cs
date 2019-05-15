@@ -16,8 +16,8 @@ namespace Loly.Agent.Api
     [Produces("application/json")]
     public class DiscoveriesController : LolyControllerBase
     {
-        private ILog _log = LogManager.GetLogger(typeof(DiscoveriesController));
-        private IDiscoveryService _discoveryService;
+        private readonly ILog _log = LogManager.GetLogger(typeof(DiscoveriesController));
+        private readonly IDiscoveryService _discoveryService;
 
         public DiscoveriesController(IDiscoveryService service)
         {

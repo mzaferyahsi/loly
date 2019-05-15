@@ -10,7 +10,7 @@ namespace Loly.Agent.Tests.Kafka
 {
     public class MockKafkaProducerHostedService : KafkaProducerHostedService
     {
-        public MockKafkaProducerHostedService(IKafkaConfigProducer configProducer) : base(configProducer)
+        public MockKafkaProducerHostedService(IKafkaConfigProducer configProducer, IKafkaProducerQueue queue) : base(configProducer, queue)
         {
         }
 
@@ -52,7 +52,8 @@ namespace Loly.Agent.Tests.Kafka
         public void InitializeTest()
         {
             var mock = Mock.Of<IKafkaConfigProducer>(x => x.GetProducerConfig() == new ProducerConfig());
-            var producerHostedService = new KafkaProducerHostedService(mock);
+            var queue = new KafkaProducerQueue();
+            var producerHostedService = new KafkaProducerHostedService(mock,queue);
             Assert.IsAssignableFrom<IKafkaProducerHostedService>(producerHostedService);
         }
 
@@ -60,7 +61,8 @@ namespace Loly.Agent.Tests.Kafka
         public void UnscheduleTest()
         {
             var mock = Mock.Of<IKafkaConfigProducer>(x => x.GetProducerConfig() == new ProducerConfig());
-            var producerHostedService = new KafkaProducerHostedService(mock);
+            var queue = new KafkaProducerQueue();
+            var producerHostedService = new KafkaProducerHostedService(mock,queue);
             Assert.IsAssignableFrom<IKafkaProducerHostedService>(producerHostedService);
             producerHostedService.StartAsync(CancellationToken.None);
             Thread.Sleep(30);
@@ -71,7 +73,8 @@ namespace Loly.Agent.Tests.Kafka
         public void RescheduleTest()
         {
             var mock = Mock.Of<IKafkaConfigProducer>(x => x.GetProducerConfig() == new ProducerConfig());
-            var producerHostedService = new KafkaProducerHostedService(mock);
+            var queue = new KafkaProducerQueue();
+            var producerHostedService = new KafkaProducerHostedService(mock,queue);
             Assert.IsAssignableFrom<IKafkaProducerHostedService>(producerHostedService);
             producerHostedService.StartAsync(CancellationToken.None);
             Thread.Sleep(30);
@@ -89,10 +92,12 @@ namespace Loly.Agent.Tests.Kafka
             };
 
             var mockKafkaConfigProducer = new Mock<IKafkaConfigProducer>();
-            var mockKafkaProducerHostedService =
-                new Mock<MockKafkaProducerHostedService>(mockKafkaConfigProducer.Object);
+            var queue = new KafkaProducerQueue();
+            queue.Enqueue(message);
 
-            mockKafkaProducerHostedService.Object.AddMessage(message);
+            var mockKafkaProducerHostedService =
+                new Mock<MockKafkaProducerHostedService>(mockKafkaConfigProducer.Object, queue);
+
 
             await mockKafkaProducerHostedService.Object.StartAsync(CancellationToken.None);
             Thread.Sleep(100);
@@ -102,8 +107,9 @@ namespace Loly.Agent.Tests.Kafka
         public void HandleErrorTest()
         {
             var mockKafkaConfigProducer = new Mock<IKafkaConfigProducer>();
+            var queue = new KafkaProducerQueue();
             var mockKafkaProducerHostedService =
-                new MockKafkaProducerHostedService(mockKafkaConfigProducer.Object);
+                new MockKafkaProducerHostedService(mockKafkaConfigProducer.Object, queue);
             
             mockKafkaProducerHostedService.HandleError(new Error(ErrorCode.Local_TimedOut));
             mockKafkaProducerHostedService.HandleError(new Error(ErrorCode.Local_TimedOut, "reason", true));
@@ -113,8 +119,9 @@ namespace Loly.Agent.Tests.Kafka
         public void HandleLogMessageTest()
         {
             var mockKafkaConfigProducer = new Mock<IKafkaConfigProducer>();
+            var queue = new KafkaProducerQueue();
             var mockKafkaProducerHostedService =
-                new MockKafkaProducerHostedService(mockKafkaConfigProducer.Object);
+                new MockKafkaProducerHostedService(mockKafkaConfigProducer.Object, queue);
             
             mockKafkaProducerHostedService.HandleLog(new LogMessage("TestMessage", SyslogLevel.Info, "test", "test"));
             mockKafkaProducerHostedService.HandleLog(new LogMessage("TestMessage", SyslogLevel.Alert, "test", "test"));

@@ -12,15 +12,12 @@ namespace Loly.Agent.Discoveries
 {
     public class DiscoveryService : IDiscoveryService
     {
-        private ILog _log = LogManager.GetLogger(typeof(DiscoveryService));
-        private Queue<string> _queue = new Queue<string>();
-        private IKafkaProducerHostedService _kafkaProducerHostedService;
+        private readonly ILog _log = LogManager.GetLogger(typeof(DiscoveryService));
+        private readonly IKafkaProducerQueue _kafkaProducerQueue;
 
-        public DiscoveryService(IKafkaProducerHostedService kafkaProducerHostedService)
+        public DiscoveryService(IKafkaProducerQueue kafkaProducerQueue)
         {
-            _kafkaProducerHostedService = kafkaProducerHostedService;
-            _kafkaProducerHostedService.StartAsync(CancellationToken.None);
-
+            _kafkaProducerQueue = kafkaProducerQueue;
         }
 
         public virtual Task GetDiscoverTask(string path)
@@ -69,9 +66,7 @@ namespace Loly.Agent.Discoveries
                 Message = path
             };
 
-            _kafkaProducerHostedService.AddMessage(message);
-            _kafkaProducerHostedService.StartAsync(CancellationToken.None);
-            _kafkaProducerHostedService.Publish();
+            _kafkaProducerQueue.Enqueue(message);
         }
 
         private void DiscoverDirectory(string path)
@@ -85,7 +80,12 @@ namespace Loly.Agent.Discoveries
                 var directories = di.GetDirectories().Select(x => x.FullName);
                 var paths = files.Concat(directories).ToArray();
 
-                Parallel.ForEach(paths, Discover);
+                foreach (var _path in paths)
+                {
+                    Discover(_path);
+                }
+
+//                Parallel.ForEach(paths, Discover);
             }
             catch (UnauthorizedAccessException e)
             {

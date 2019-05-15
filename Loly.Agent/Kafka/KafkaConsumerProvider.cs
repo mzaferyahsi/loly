@@ -13,7 +13,7 @@ namespace Loly.Agent.Kafka
 
     public class KafkaConsumerProvider : IKafkaConsumerProvider
     {
-        private IKafkaConfigProducer _configProducer;
+        private readonly IKafkaConfigProducer _configProducer;
 
         public KafkaConsumerProvider(IKafkaConfigProducer configProducer)
         {
