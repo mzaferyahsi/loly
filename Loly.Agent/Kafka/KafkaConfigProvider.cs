@@ -1,3 +1,4 @@
+using System;
 using Confluent.Kafka;
 using log4net;
 using Microsoft.Extensions.Options;
@@ -27,7 +28,8 @@ namespace Loly.Agent.Kafka
             {
                 GroupId = _settings.Consumer.GroupId,
                 BootstrapServers = _settings.BootstrapServers,
-                AutoOffsetReset = AutoOffsetReset.Earliest
+                AutoOffsetReset = AutoOffsetReset.Earliest,
+                MaxPollIntervalMs = (int?) TimeSpan.FromHours(12).TotalMilliseconds
             };
         }
 
