@@ -57,7 +57,7 @@ namespace Loly.Agent
             services.AddHangfire(configuration => configuration
                 .UseLog4NetLogProvider());
 
-            services.AddTransient<IDiscoveryService, DiscoveryService>();
+            services.AddSingleton<IDiscoveryService, DiscoveryService>();
 
             services.AddOptions();
             

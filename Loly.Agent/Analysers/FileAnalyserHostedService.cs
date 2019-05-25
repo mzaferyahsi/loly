@@ -108,9 +108,9 @@ namespace Loly.Agent.Analysers
                     while (!_cancellationTokenSource.IsCancellationRequested)
                     {
                         var cr = _consumer.Consume(CancellationToken.None);
-                        _log.Debug($"Received {cr.Value} for analyse.");
+//                        _log.Debug($"Received {cr.Value} for analyse.");
                         var fileInfo = await _analyser.Analyse(cr.Value);
-                        _log.Debug($"Analyse result as {JsonConvert.SerializeObject(fileInfo)}");
+//                        _log.Debug($"Analyse result as {JsonConvert.SerializeObject(fileInfo)}");
     
                         if (fileInfo != null)
                             ProduceMessage(fileInfo);

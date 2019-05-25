@@ -43,6 +43,7 @@ namespace Loly.Agent.Kafka
                 _log.Debug("Scheduling producer.");
                 _timer = new Timer((state) =>
                 {
+//                    _log.Debug("Timer ticked..");
                     Publish();
                 }, null, TimeSpan.Zero, TimeSpan.FromSeconds(5));
                 _log.Debug("Producer scheduled.");
@@ -120,12 +121,14 @@ namespace Loly.Agent.Kafka
                         var dequeueResult = _queue.TryDequeue(out message);
                         if (!dequeueResult)
                         {
+                            _log.Debug("No message found to publish.");
                             hasMessage = false;
                             break;
                         }
 
                         try
                         {
+//                            _log.Debug($"Publishing ${message.Message.ToString()}");
                             await p.ProduceAsync(message.Topic,
                                 new Message<Null, string>
                                 {
@@ -133,6 +136,7 @@ namespace Loly.Agent.Kafka
                                         ? JsonConvert.SerializeObject(message.Message)
                                         : (string) message.Message
                                 });
+//                            _log.Debug($"Published ${message.Message.ToString()}");
 
                         }
                         catch (ProduceException<Null, string> e)

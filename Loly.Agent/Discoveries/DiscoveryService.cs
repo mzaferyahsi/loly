@@ -32,7 +32,7 @@ namespace Loly.Agent.Discoveries
 
         public void Discover(string path)
         {
-            _log.DebugFormat("Received {0} for discovery.", path);
+//            _log.DebugFormat("Received {0} for discovery.", path);
             try
             {
                 if (path.StartsWith("~/"))
@@ -83,12 +83,7 @@ namespace Loly.Agent.Discoveries
                 var directories = di.GetDirectories().Select(x => x.FullName);
                 var paths = files.Concat(directories).ToArray();
 
-                foreach (var _path in paths)
-                {
-                    Discover(_path);
-                }
-
-//                Parallel.ForEach(paths, Discover);
+                Parallel.ForEach(paths, Discover);
             }
             catch (UnauthorizedAccessException e)
             {
