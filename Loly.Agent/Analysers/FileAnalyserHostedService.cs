@@ -12,22 +12,26 @@ using Error = Confluent.Kafka.Error;
 
 namespace Loly.Agent.Analysers
 {
-    public class FileAnalyserHostedService : IHostedService
+    public class FileAnalyserHostedService : IHostedService, IDisposable
     {
         private readonly IKafkaConsumerProvider _consumerProvider;
         private readonly ILog _log = LogManager.GetLogger(typeof(FileAnalyserHostedService));
         private readonly FileAnalyser _analyser;
         private readonly IKafkaProducerQueue _kafkaProducerQueue;
+        private readonly KafkaProducerHostedService _kafkaProducerHostedService;
         private CancellationTokenSource _cancellationTokenSource;
         private IConsumer<Ignore, string> _consumer;
         private Task _consumeTask;
 
-        public FileAnalyserHostedService(IKafkaProducerQueue kafkaProducerQueue,
+        public FileAnalyserHostedService(IKafkaConfigProducer configProducer,
             IKafkaConsumerProvider consumerProvider, FileAnalyser analyser)
         {
             _consumerProvider = consumerProvider;
             _analyser = analyser;
-            _kafkaProducerQueue = kafkaProducerQueue;
+            _kafkaProducerQueue = new KafkaProducerQueue();
+            _kafkaProducerHostedService = new KafkaProducerHostedService(configProducer, _kafkaProducerQueue);
+            _cancellationTokenSource = new CancellationTokenSource();
+            _kafkaProducerHostedService.StartAsync(_cancellationTokenSource.Token);
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -96,7 +100,6 @@ namespace Loly.Agent.Analysers
 
                 _consumer = _consumerProvider.GetConsumer<Ignore, string>(LogHandler, ErrorHandler);
                 _consumer.Subscribe("loly-discovered");
-                _cancellationTokenSource = new CancellationTokenSource();
                 _consumeTask = Task.Run(async () => 
                 {
                     if (_consumer == null)
@@ -132,7 +135,7 @@ namespace Loly.Agent.Analysers
             {
                 _cancellationTokenSource.Cancel();
                 _consumeTask = null;
-                _cancellationTokenSource = null;
+//                _cancellationTokenSource = null;
             }
         }
 
@@ -144,6 +147,16 @@ namespace Loly.Agent.Analysers
                 Message = fileInfo
             };
             _kafkaProducerQueue.Enqueue(message);
+        }
+
+        public void Dispose()
+        {
+            _cancellationTokenSource.Cancel();
+            _kafkaProducerHostedService.StopAsync(_cancellationTokenSource.Token);
+            _kafkaProducerHostedService?.Dispose();
+            _cancellationTokenSource?.Dispose();
+            _consumer?.Dispose();
+            _consumeTask?.Dispose();
         }
     }
 }

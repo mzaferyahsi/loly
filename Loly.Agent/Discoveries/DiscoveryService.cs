@@ -10,14 +10,17 @@ using Loly.Agent.Kafka;
 
 namespace Loly.Agent.Discoveries
 {
-    public class DiscoveryService : IDiscoveryService
+    public class DiscoveryService : IDiscoveryService, IDisposable
     {
         private readonly ILog _log = LogManager.GetLogger(typeof(DiscoveryService));
         private readonly IKafkaProducerQueue _kafkaProducerQueue;
+        private readonly KafkaProducerHostedService _kafkaProducerHostedService;
 
-        public DiscoveryService(IKafkaProducerQueue kafkaProducerQueue)
+        public DiscoveryService(IKafkaConfigProducer configProducer)
         {
-            _kafkaProducerQueue = kafkaProducerQueue;
+            _kafkaProducerQueue = new KafkaProducerQueue();
+            _kafkaProducerHostedService = new KafkaProducerHostedService(configProducer, _kafkaProducerQueue);
+            _kafkaProducerHostedService.StartAsync(CancellationToken.None);
         }
 
         public virtual Task GetDiscoverTask(string path)
@@ -91,6 +94,12 @@ namespace Loly.Agent.Discoveries
             {
                 _log.WarnFormat("Unable to access {0} due to authorization error", path);
             }
+        }
+
+        public void Dispose()
+        {
+            _kafkaProducerHostedService.StopAsync(CancellationToken.None);
+            _kafkaProducerHostedService?.Dispose();
         }
     }
 }
