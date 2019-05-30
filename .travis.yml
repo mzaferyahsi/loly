@@ -10,11 +10,11 @@ env:
 
 before_install:
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+  - dotnet tool install --global dotnet-reportgenerator-globaltool
   - dotnet clean
 
 
 install:
-  - dotnet tool install --global dotnet-reportgenerator-globaltool
   - dotnet restore
 #  - nuget install xunit.runners -Version 1.9.2 -OutputDirectory testrunner
 
