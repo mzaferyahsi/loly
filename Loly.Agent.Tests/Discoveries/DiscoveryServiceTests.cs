@@ -1,7 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Loly.Agent.Discoveries;
-using Loly.Agent.Kafka;
+using Loly.Kafka;
 using Microsoft.Extensions.Options;
 using Moq;
 using Xunit;

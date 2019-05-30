@@ -1,5 +1,5 @@
 using Confluent.Kafka;
-using Loly.Agent.Kafka;
+using Loly.Kafka;
 using Moq;
 using Xunit;
 

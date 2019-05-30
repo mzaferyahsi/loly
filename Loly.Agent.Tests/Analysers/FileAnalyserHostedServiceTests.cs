@@ -2,9 +2,7 @@ using System;
 using System.Threading;
 using Confluent.Kafka;
 using Loly.Agent.Analysers;
-using Loly.Agent.Kafka;
-using Loly.Agent.Services;
-using Loly.Agent.Tests.Kafka;
+using Loly.Kafka;
 using Moq;
 using Xunit;
 

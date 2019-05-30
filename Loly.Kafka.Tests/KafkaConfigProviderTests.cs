@@ -1,4 +1,4 @@
-using Loly.Agent.Kafka;
+using Loly.Kafka;
 using Microsoft.Extensions.Options;
 using Xunit;
 

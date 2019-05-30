@@ -1,18 +1,13 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Confluent.Kafka;
-using Hangfire.States;
 using log4net;
-using Loly.Agent.Models;
-using Microsoft.AspNetCore.Mvc.TagHelpers.Cache;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Bson;
 using Error = Confluent.Kafka.Error;
 
-namespace Loly.Agent.Kafka
+namespace Loly.Kafka
 {
     public interface IKafkaProducerHostedService : IHostedService
     {

@@ -3,7 +3,7 @@ using Confluent.Kafka;
 using log4net;
 using Microsoft.Extensions.Options;
 
-namespace Loly.Agent.Kafka
+namespace Loly.Kafka
 {
     public interface IKafkaConfigProducer
     {

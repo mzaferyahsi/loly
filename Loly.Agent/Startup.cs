@@ -11,7 +11,7 @@ using log4net;
 using Loly.Agent.Analysers;
 using Loly.Agent.Discoveries;
 using Loly.Agent.Discovery;
-using Loly.Agent.Kafka;
+using Loly.Kafka;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server.Features;
@@ -113,7 +113,7 @@ namespace Loly.Agent
             }
             catch (ArgumentNullException e)
             {
-                
+                log.Debug(e);
             }         
         }
     }

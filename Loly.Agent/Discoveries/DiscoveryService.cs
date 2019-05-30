@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using log4net;
 using Loly.Agent.Discovery;
-using Loly.Agent.Kafka;
+using Loly.Kafka;
 
 namespace Loly.Agent.Discoveries
 {
@@ -55,7 +55,7 @@ namespace Loly.Agent.Discoveries
                     QueueMessage(Path.GetFullPath(path));
                 }
             }
-            catch (FileNotFoundException e)
+            catch (FileNotFoundException)
             {
                 _log.Warn($"{path} not found.");
             }
@@ -98,6 +98,7 @@ namespace Loly.Agent.Discoveries
             catch (UnauthorizedAccessException e)
             {
                 _log.WarnFormat("Unable to access {0} due to authorization error", path);
+                _log.Warn(e);
             }
         }
 

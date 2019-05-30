@@ -20,12 +20,12 @@ namespace Loly.Agent.Analysers
                 var fileAttr = File.GetAttributes(path);
 
                 FileInformation information = (fileAttr & FileAttributes.Directory) != 0
-                    ? await GetDirectoryInformation(Path.GetFullPath(path))
+                    ? GetDirectoryInformation(Path.GetFullPath(path))
                     : await GetFileInformation(Path.GetFullPath(path));
 
                 return information;
             }
-            catch (FileNotFoundException e)
+            catch (FileNotFoundException)
             {
                 _log.Warn($"Unable to find {path}");
                 return null;
@@ -37,7 +37,7 @@ namespace Loly.Agent.Analysers
             }
         }
 
-        private async Task<FileInformation> GetDirectoryInformation(string path)
+        private FileInformation GetDirectoryInformation(string path)
         {
             try
             {
@@ -61,7 +61,7 @@ namespace Loly.Agent.Analysers
 
                 return fileInfo;
             }
-            catch (FileNotFoundException e)
+            catch (FileNotFoundException)
             {
                 _log.Warn($"Unable to find {path}");
                 return null;
@@ -95,7 +95,7 @@ namespace Loly.Agent.Analysers
 
                 return fileInfo;
             }
-            catch (FileNotFoundException e)
+            catch (FileNotFoundException)
             {
                 _log.Warn($"Unable to find {path}");
                 return null;
