@@ -3,6 +3,8 @@
     <PropertyGroup>
         <TargetFramework>netcoreapp2.2</TargetFramework>
         <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
+        <Configurations>Debug;Release;ReleaseAgent</Configurations>
+        <Platforms>AnyCPU</Platforms>
     </PropertyGroup>
 
     <ItemGroup>
