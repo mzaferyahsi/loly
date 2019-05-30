@@ -1,2 +1,2 @@
-cd Loly.Agent/ && \
-  ./build-and-push-docker.sh
+cd Docker/ && \
+  ./build-and-push-agent.sh
