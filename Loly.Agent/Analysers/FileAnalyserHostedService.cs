@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Confluent.Kafka;
 using log4net;
-using Loly.Agent.Kafka;
+using Loly.Kafka;
 using Loly.Agent.Models;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;

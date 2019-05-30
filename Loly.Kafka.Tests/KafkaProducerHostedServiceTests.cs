@@ -1,7 +1,7 @@
 using System;
 using System.Threading;
 using Confluent.Kafka;
-using Loly.Agent.Kafka;
+using Loly.Kafka;
 using Moq;
 using Xunit;
 using Newtonsoft.Json;
@@ -11,9 +11,14 @@ namespace Loly.Agent.Tests.Kafka
 {
     public class MockKafkaProducerHostedService : KafkaProducerHostedService
     {
-        public MockKafkaProducerHostedService(IKafkaConfigProducer configProducer, IKafkaProducerQueue queue) : base(configProducer, queue)
+        protected ITestOutputHelper _testOutputHelper;
+
+        public MockKafkaProducerHostedService(IKafkaConfigProducer configProducer, IKafkaProducerQueue queue, ITestOutputHelper testOutputHelper) : base(configProducer, queue)
         {
+            _testOutputHelper = testOutputHelper;
         }
+        public bool TestCompleted { get; set; }
+
 
         protected override IProducer<Null, string> GetProducer()
         {
@@ -31,7 +36,12 @@ namespace Loly.Agent.Tests.Kafka
 
             var mockProducer = new Mock<IProducer<Null, string>>();
             mockProducer.Setup(x => x.ProduceAsync(message.Topic,
-                It.IsAny<Message<Null, string>>())).ReturnsAsync(deliveryResult);
+                It.IsAny<Message<Null, string>>()))
+                .ReturnsAsync(() =>
+                {
+                    TestCompleted = true;
+                    return deliveryResult;
+                });
 
             return mockProducer.Object;
         }
@@ -44,6 +54,41 @@ namespace Loly.Agent.Tests.Kafka
         public void HandleLog(LogMessage message)
         {
             this.LogHandler(this.GetProducer(), message);
+        }
+    }
+    
+    public class MockKafkaProducerHostedServiceFailOnProduce : MockKafkaProducerHostedService
+    {
+        public MockKafkaProducerHostedServiceFailOnProduce(IKafkaConfigProducer configProducer, IKafkaProducerQueue queue, ITestOutputHelper testOutputHelper) : base(configProducer, queue, testOutputHelper)
+        {
+        }
+
+
+        protected override IProducer<Null, string> GetProducer()
+        {
+            var message = new KafkaMessage()
+            {
+                Topic = "test-topic",
+                Message = "HelloWorld"
+            };
+
+            var deliveryResult =
+                new DeliveryResult<Null, string>
+                {
+                    Message = new Message<Null, string>() {Value = JsonConvert.SerializeObject(message.Message)}
+                };
+
+            var mockProducer = new Mock<IProducer<Null, string>>();
+            mockProducer.Setup(x => 
+                    x.ProduceAsync(message.Topic,It.IsAny<Message<Null, string>>()))
+                .ReturnsAsync(() =>
+                {
+                    TestCompleted = true;
+                    _testOutputHelper.WriteLine("Throwing exception");
+                    throw new ProduceException<Null, string>(new Error(ErrorCode.Local_Fail), null);
+                });
+
+            return mockProducer.Object;
         }
     }
 
@@ -112,12 +157,37 @@ namespace Loly.Agent.Tests.Kafka
             var queue = new KafkaProducerQueue();
             queue.Enqueue(message);
 
-            var mockKafkaProducerHostedService =
-                new Mock<MockKafkaProducerHostedService>(mockKafkaConfigProducer.Object, queue);
+            var mockKafkaProducerHostedService = new MockKafkaProducerHostedService(mockKafkaConfigProducer.Object, queue, _testOutputHelper);
 
 
-            await mockKafkaProducerHostedService.Object.StartAsync(CancellationToken.None);
+            await mockKafkaProducerHostedService.StartAsync(CancellationToken.None);
             Thread.Sleep(100);
+        }
+        
+        [Fact]
+        public async void PublishFailTest()
+        {
+            var message = new KafkaMessage()
+            {
+                Topic = "test-topic",
+                Message = "HelloWorld"
+            };
+
+            var mockKafkaConfigProducer = new Mock<IKafkaConfigProducer>();
+            var queue = new KafkaProducerQueue();
+            queue.Enqueue(message);
+
+            var mockKafkaProducerHostedService = new MockKafkaProducerHostedServiceFailOnProduce(mockKafkaConfigProducer.Object, queue, _testOutputHelper);
+
+
+            await mockKafkaProducerHostedService.StartAsync(CancellationToken.None);
+            while (!mockKafkaProducerHostedService.TestCompleted)
+            {
+                _testOutputHelper.WriteLine("waiting..");
+                Thread.Sleep(100);
+            }
+            Thread.Sleep(100);
+            _testOutputHelper.WriteLine($"completed, ${mockKafkaProducerHostedService.TestCompleted}");
         }
         
         [Fact]
@@ -126,7 +196,7 @@ namespace Loly.Agent.Tests.Kafka
             var mockKafkaConfigProducer = new Mock<IKafkaConfigProducer>();
             var queue = new KafkaProducerQueue();
             var mockKafkaProducerHostedService =
-                new MockKafkaProducerHostedService(mockKafkaConfigProducer.Object, queue);
+                new MockKafkaProducerHostedService(mockKafkaConfigProducer.Object, queue, _testOutputHelper);
             
             mockKafkaProducerHostedService.HandleError(new Error(ErrorCode.Local_TimedOut));
             mockKafkaProducerHostedService.HandleError(new Error(ErrorCode.Local_TimedOut, "reason", true));
@@ -138,7 +208,7 @@ namespace Loly.Agent.Tests.Kafka
             var mockKafkaConfigProducer = new Mock<IKafkaConfigProducer>();
             var queue = new KafkaProducerQueue();
             var mockKafkaProducerHostedService =
-                new MockKafkaProducerHostedService(mockKafkaConfigProducer.Object, queue);
+                new MockKafkaProducerHostedService(mockKafkaConfigProducer.Object, queue, _testOutputHelper);
             
             mockKafkaProducerHostedService.HandleLog(new LogMessage("TestMessage", SyslogLevel.Info, "test", "test"));
             mockKafkaProducerHostedService.HandleLog(new LogMessage("TestMessage", SyslogLevel.Alert, "test", "test"));

@@ -1,7 +1,7 @@
 using System;
 using Confluent.Kafka;
 
-namespace Loly.Agent.Kafka
+namespace Loly.Kafka
 {
     public interface IKafkaConsumerProvider
     {

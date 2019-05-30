@@ -6,12 +6,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Confluent.Kafka" Version="1.0.0" />
-        <PackageReference Include="Hangfire" Version="1.7.1" />
+        <PackageReference Include="Confluent.Kafka" Version="1.0.1" />
+        <PackageReference Include="Hangfire" Version="1.7.3" />
         <PackageReference Include="log4net.ElasticSearch" Version="2.5.0" />
         <PackageReference Include="Microsoft.AspNetCore.App" />
         <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Log4Net.AspNetCore" Version="2.2.10" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Log4Net.AspNetCore" Version="2.2.11" />
         <PackageReference Include="Mime" Version="3.0.2" />
         <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
     </ItemGroup>
@@ -38,6 +38,14 @@
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Kafka" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Loly.Kafka\Loly.Kafka.csproj" />
     </ItemGroup>
 
 </Project>

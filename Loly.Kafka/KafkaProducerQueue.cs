@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 
-namespace Loly.Agent.Kafka
+namespace Loly.Kafka
 {
     public interface IKafkaProducerQueue
     {

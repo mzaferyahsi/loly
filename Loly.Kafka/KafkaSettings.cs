@@ -1,4 +1,4 @@
-namespace Loly.Agent.Kafka
+namespace Loly.Kafka
 {
     public class KafkaSettings
     {

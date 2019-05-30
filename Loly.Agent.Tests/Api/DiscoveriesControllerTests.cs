@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Loly.Agent.Api;
 using Loly.Agent.Controllers;
 using Loly.Agent.Discovery;
-using Loly.Agent.Kafka;
+using Loly.Kafka;
 using Loly.Agent.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
