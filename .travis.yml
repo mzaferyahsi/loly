@@ -8,31 +8,16 @@ solution: Loly.sln
 env:
   - DOTNET_CLI_TELEMETRY_OPTOUT=1
 
-#before_install:
-#  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-#  # - dotnet tool install --global dotnet-reportgenerator-globaltool
-#  - dotnet clean
-#
-#
-#install:
-#  - dotnet restore
-##  - nuget install xunit.runners -Version 1.9.2 -OutputDirectory testrunner
-#
-#script:
-#  - touch ~/found.txt
-#  - dotnet build && ./test.sh && ./build-and-push-docker.sh
-    
-jobs:
-  include:
-    - stage: Prepare
-      script: touch ~/found.txt
-    - script: dotnet clean
-    - script: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-    - stage: Build
-      script: dotnet clean
-    - script: dotnet restore
-    - script: dotent build
-    - stage: Test
-      script: ./test.sh
-    - stage: Docker Release
-      script: ./build-and-push-docker.sh
+before_install:
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+  # - dotnet tool install --global dotnet-reportgenerator-globaltool
+  - dotnet clean
+
+
+install:
+  - dotnet restore
+#  - nuget install xunit.runners -Version 1.9.2 -OutputDirectory testrunner
+
+script:
+  - touch ~/found.txt
+  - dotnet build && ./test.sh && ./build-and-push-docker.sh
