@@ -1,11 +1,7 @@
-using System;
-using System.Net;
 using Loly.Agent.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Newtonsoft.Json;
 
-namespace Loly.Agent.Controllers
+namespace Loly.Agent.ErrorResults
 {
     public class InternalServerErrorResult : ObjectResult
     {

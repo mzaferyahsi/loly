@@ -10,6 +10,7 @@ using Microsoft.Extensions.Options;
 using Xunit;
 using Moq;
 using System.Threading;
+using Loly.Agent.ErrorResults;
 
 namespace Loly.Agent.Tests.Api
 {
