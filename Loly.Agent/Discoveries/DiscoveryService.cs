@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -6,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using log4net;
 using Loly.Agent.Discovery;
+using Loly.Agent.Utility;
 using Loly.Kafka;
 
 namespace Loly.Agent.Discoveries
@@ -29,26 +31,44 @@ namespace Loly.Agent.Discoveries
 
             return task;
         }
+        
+        public virtual Task GetDiscoverTask(string path, IList<string> exclusions)
+        {
+            var task = new Task(() => Discover(path, exclusions));
+
+            return task;
+        }
 
         public void Discover(string path)
+        {
+            Discover(path, 
+                new List<string>());
+        }
+
+        public void Discover(string path, IList<string> exclusions)
         {
 //            _log.DebugFormat("Received {0} for discovery.", path);
             try
             {
-                if (path.StartsWith("~/"))
+                var homePathExclusions = exclusions.Where(x => x.StartsWith("~"));
+
+                foreach (var homePathExclusion in homePathExclusions)
                 {
-                    string homePath = (Environment.OSVersion.Platform == PlatformID.Unix ||
-                                       Environment.OSVersion.Platform == PlatformID.MacOSX)
-                        ? Environment.GetEnvironmentVariable("HOME")
-                        : Environment.ExpandEnvironmentVariables("%HOMEDRIVE%%HOMEPATH%");
-                    path = path.Replace("~", homePath);
+                    exclusions.Remove(homePathExclusion);
+                    exclusions.Add(PathResolver.Resolve(homePathExclusion));
                 }
+                
+                path = PathResolver.Resolve(path);
+                
+                foreach (var exclusion in exclusions)
+                    if (path.StartsWith(exclusion))
+                        return;
 
                 var fileAttr = File.GetAttributes(Path.GetFullPath(path));
 
                 if ((fileAttr & FileAttributes.Directory) != 0)
                 {
-                    DiscoverDirectory(Path.GetFullPath(path));
+                    DiscoverDirectory(Path.GetFullPath(path), exclusions);
                 }
                 else
                 {
@@ -72,7 +92,7 @@ namespace Loly.Agent.Discoveries
             _kafkaProducerQueue.Enqueue(message);
         }
 
-        private void DiscoverDirectory(string path)
+        private void DiscoverDirectory(string path, IList<string> exclusions)
         {
             try
             {
@@ -84,12 +104,12 @@ namespace Loly.Agent.Discoveries
 
                 foreach (var file in files)
                 {
-                    Discover(file);
+                    Discover(file, exclusions);
                 }
 
                 foreach (var directory in directories)
                 {
-                    Discover(directory);
+                    Discover(directory, exclusions);
                 }
 
 //                var paths = files.Concat(directories).ToArray();
