@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using log4net;
@@ -16,12 +17,12 @@ namespace Loly.Agent.Discoveries
     {
         private readonly ILog _log = LogManager.GetLogger(typeof(DiscoveryService));
         private readonly IKafkaProducerQueue _kafkaProducerQueue;
-        private readonly KafkaProducerHostedService _kafkaProducerHostedService;
+        private readonly IKafkaProducerHostedService _kafkaProducerHostedService;
 
-        public DiscoveryService(IKafkaConfigProducer configProducer)
+        public DiscoveryService(IKafkaProducerHostedService kafkaProducerHostedService)
         {
-            _kafkaProducerQueue = new KafkaProducerQueue();
-            _kafkaProducerHostedService = new KafkaProducerHostedService(configProducer, _kafkaProducerQueue);
+            _kafkaProducerHostedService = kafkaProducerHostedService;
+            _kafkaProducerQueue = _kafkaProducerHostedService.Queue;
             _kafkaProducerHostedService.StartAsync(CancellationToken.None);
         }
 
@@ -47,23 +48,19 @@ namespace Loly.Agent.Discoveries
 
         public void Discover(string path, IList<string> exclusions)
         {
-//            _log.DebugFormat("Received {0} for discovery.", path);
             try
             {
-                var homePathExclusions = exclusions.Where(x => x.StartsWith("~"));
-
-                foreach (var homePathExclusion in homePathExclusions)
-                {
-                    exclusions.Remove(homePathExclusion);
-                    exclusions.Add(PathResolver.Resolve(homePathExclusion));
-                }
-                
                 path = PathResolver.Resolve(path);
                 
-                foreach (var exclusion in exclusions)
-                    if (path.StartsWith(exclusion))
-                        return;
+                ResolveExclusions(exclusions);
 
+                foreach (var exclusion in exclusions)
+                {
+                    var shouldExclude = Regex.IsMatch(path, exclusion, RegexOptions.IgnoreCase);
+                    if(shouldExclude)
+                        return;
+                }
+                
                 var fileAttr = File.GetAttributes(Path.GetFullPath(path));
 
                 if ((fileAttr & FileAttributes.Directory) != 0)
@@ -78,6 +75,23 @@ namespace Loly.Agent.Discoveries
             catch (FileNotFoundException)
             {
                 _log.Warn($"{path} not found.");
+            }
+        }
+
+        private static void ResolveExclusions(IList<string> exclusions)
+        {
+            if(exclusions.Any(x=> x.Contains("~/"))) {
+                
+                var homePathExclusions = new List<string>();
+                homePathExclusions.AddRange(exclusions.Where(x => x.Contains("~/")).ToArray());
+
+                foreach (var homePathExclusion in homePathExclusions)
+                {
+                    exclusions.Remove(homePathExclusion);
+
+                    exclusions.Add(homePathExclusion.Replace("~/", PathResolver.Resolve("~/")));
+                }
+                
             }
         }
 
@@ -99,21 +113,13 @@ namespace Loly.Agent.Discoveries
                 QueueMessage(path);
 
                 var di = new DirectoryInfo(path);
-                var files = di.GetFiles().Select(x => x.FullName);
-                var directories = di.GetDirectories().Select(x => x.FullName);
+                var files = di.GetFiles().Select(x => x.FullName).ToList();
+                var directories = di.GetDirectories().Select(x => x.FullName).ToList();
 
-                foreach (var file in files)
-                {
-                    Discover(file, exclusions);
-                }
+                Parallel.ForEach(files, (file) => { Discover(file, exclusions); });
 
-                foreach (var directory in directories)
-                {
-                    Discover(directory, exclusions);
-                }
+                Parallel.ForEach(directories, directory => { Discover(directory, exclusions); });
 
-//                var paths = files.Concat(directories).ToArray();
-//                Parallel.ForEach(paths, Discover);
             }
             catch (UnauthorizedAccessException e)
             {

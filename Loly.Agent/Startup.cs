@@ -65,6 +65,7 @@ namespace Loly.Agent
             services.AddTransient<IKafkaConfigProducer, KafkaConfigProvider>();
 //            services.AddSingleton<IKafkaProducerQueue, KafkaProducerQueue>();
 //            services.AddHostedService<KafkaProducerHostedService>();
+            services.AddTransient<IKafkaProducerHostedService, KafkaProducerHostedService>();
             services.AddSingleton<IKafkaConsumerProvider, KafkaConsumerProvider>();
             services.AddHostedService<FileAnalyserHostedService>();
             services.AddSingleton<FileAnalyser>();

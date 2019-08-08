@@ -19,7 +19,7 @@ install:
 #  - nuget install xunit.runners -Version 1.9.2 -OutputDirectory testrunner
 
 script:
-  - touch ~/found.txt
+#  - touch ~/found.txt
   - dotnet build && ./test.sh
 
 after_success:

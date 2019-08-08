@@ -9,24 +9,32 @@ using Error = Confluent.Kafka.Error;
 
 namespace Loly.Kafka
 {
-    public interface IKafkaProducerHostedService : IHostedService
+    public interface IKafkaProducerHostedService : IHostedService, IDisposable
     {
+        IKafkaProducerQueue Queue { get; set; }
     }
 
     public class KafkaProducerHostedService : IKafkaProducerHostedService, IDisposable
     {
         protected readonly ILog _log = LogManager.GetLogger(typeof(KafkaProducerHostedService));
         private readonly IKafkaConfigProducer _configProducer;
-        private readonly IKafkaProducerQueue _queue;
         private Timer _timer;
         private Thread _thread;
         private bool _isPublishing = false;
 
+        public KafkaProducerHostedService(IKafkaConfigProducer configProducer)
+        {
+            _configProducer = configProducer;
+            Queue = new KafkaProducerQueue();
+        }
+        
         public KafkaProducerHostedService(IKafkaConfigProducer configProducer, IKafkaProducerQueue queue)
         {
             _configProducer = configProducer;
-            _queue = queue;
+            Queue = queue;
         }
+
+        public IKafkaProducerQueue Queue { get; set; }
 
         private void Schedule()
         {
@@ -101,7 +109,7 @@ namespace Loly.Kafka
             if(_isPublishing)
                 return;
 
-            var hasMessage = _queue.TryPeek(out var message);
+            var hasMessage = Queue.TryPeek(out var message);
             
             if (!hasMessage)
                 return;
@@ -113,7 +121,7 @@ namespace Loly.Kafka
                 {
                     do
                     {
-                        var dequeueResult = _queue.TryDequeue(out message);
+                        var dequeueResult = Queue.TryDequeue(out message);
                         if (!dequeueResult)
                         {
                             _log.Debug("No message found to publish.");
@@ -138,7 +146,7 @@ namespace Loly.Kafka
                         {
                             _log.Error($"Failed to deliver message: {e.Error.Reason}");
                         }
-                    } while (_queue.TryPeek(out message));
+                    } while (Queue.TryPeek(out message));
 
                 }
             }
