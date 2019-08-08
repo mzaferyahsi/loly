@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Loly.Agent.Api;
 using Loly.Agent.Controllers;
@@ -21,8 +22,8 @@ namespace Loly.Agent.Tests.Api
         {
             var taskExecuted = false;
             var discovery = new Models.Discovery() { Path = "./" };
-            var task = new Task((() => { taskExecuted = true; }));
-            var mock = Mock.Of<IDiscoveryService>(l => l.GetDiscoverTask("./") == task);
+            var task = new Task(() => { taskExecuted = true; });
+            var mock = Mock.Of<IDiscoveryService>(l => l.GetDiscoverTask("./") == task && l.GetDiscoverTask("./", null) == task );
 
             var controller = new DiscoveriesController(mock);
             var result = controller.Post(discovery);
@@ -37,6 +38,7 @@ namespace Loly.Agent.Tests.Api
             var discovery = new Models.Discovery() { Path = "./" };
             var mock = new Mock<IDiscoveryService>();
             mock.Setup(x => x.GetDiscoverTask("./")).Throws(new Exception("Error!"));
+            mock.Setup(x => x.GetDiscoverTask("./", null)).Throws(new Exception("Error!"));
 
             var controller = new DiscoveriesController(mock.Object);
             var result = controller.Post(discovery);
