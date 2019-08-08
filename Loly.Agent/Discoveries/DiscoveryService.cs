@@ -118,9 +118,8 @@ namespace Loly.Agent.Discoveries
                 var files = di.GetFiles().Select(x => x.FullName).ToList();
                 var directories = di.GetDirectories().Select(x => x.FullName).ToList();
 
-                Parallel.ForEach(files, (file) => { Discover(file, exclusions); });
-
-                Parallel.ForEach(directories, directory => { Discover(directory, exclusions); });
+                files.ForEach(file => { Discover(file, exclusions); });
+                directories.ForEach(directory => { Discover(directory, exclusions); });
 
             }
             catch (UnauthorizedAccessException e)
