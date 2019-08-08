@@ -57,8 +57,10 @@ namespace Loly.Agent.Discoveries
                 foreach (var exclusion in exclusions)
                 {
                     var shouldExclude = Regex.IsMatch(path, exclusion, RegexOptions.IgnoreCase);
-                    if(shouldExclude)
+                    if(shouldExclude) {
+                        _log.Debug($"Skipping ${path} because it matches ${exclusion} as exclusion filter.");
                         return;
+                    }
                 }
                 
                 var fileAttr = File.GetAttributes(Path.GetFullPath(path));
