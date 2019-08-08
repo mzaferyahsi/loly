@@ -30,7 +30,8 @@ namespace Loly.Agent.Api
         {
             try
             {
-                _discoveryService.GetDiscoverTask(discovery.Path, discovery.Exclusions).Start();
+                var task = _discoveryService.GetDiscoverTask(discovery.Path, discovery.Exclusions);
+                task.Start();
                 return Created(string.Empty, new { });
             }
             catch (Exception e)
