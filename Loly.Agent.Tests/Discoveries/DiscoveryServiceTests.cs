@@ -100,6 +100,23 @@ namespace Loly.Agent.Tests.Discoveries
             var exclusions = new List<string>() { "(~/loly/file1.txt)" };
             controller.Discover("~/loly/", exclusions);
         }
+        
+        [Fact]
+        public void DiscoverWithExclusionCaseInsensitiveTest()
+        {
+            Task task = new Task(() =>
+            {
+                _testOutputHelper.WriteLine("Producer hosted service started.");
+            });
+            var mock = Mock.Of<IKafkaProducerHostedService>(x =>
+                x.Queue == new KafkaProducerQueue() && x.StartAsync(It.IsAny<CancellationToken>()) == task && x.StopAsync(It.IsAny<CancellationToken>()) == task);
+            
+
+            var controller = new DiscoveryService(mock);
+            
+            var exclusions = new List<string>() { "(~/loly/File1)" };
+            controller.Discover("~/loly/", exclusions);
+        }
 
         public void Dispose()
         {

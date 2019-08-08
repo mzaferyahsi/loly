@@ -112,6 +112,17 @@ namespace Loly.Agent.Discoveries
         {
             try
             {
+                ResolveExclusions(exclusions);
+
+                foreach (var exclusion in exclusions)
+                {
+                    var shouldExclude = Regex.IsMatch(path, exclusion, RegexOptions.IgnoreCase);
+                    if(shouldExclude) {
+                        _log.Debug($"Skipping ${path} because it matches ${exclusion} as exclusion filter.");
+                        return;
+                    }
+                }
+                
                 QueueMessage(path);
 
                 var di = new DirectoryInfo(path);
