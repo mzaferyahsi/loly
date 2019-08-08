@@ -51,27 +51,28 @@ namespace Loly.Agent.Discoveries
             try
             {
                 path = PathResolver.Resolve(path);
+                var fullPath = Path.GetFullPath(path);
                 
                 ResolveExclusions(exclusions);
 
                 foreach (var exclusion in exclusions)
                 {
-                    var shouldExclude = Regex.IsMatch(path, exclusion, RegexOptions.IgnoreCase);
+                    var shouldExclude = Regex.IsMatch(fullPath, exclusion, RegexOptions.IgnoreCase);
                     if(shouldExclude) {
-                        _log.Debug($"Skipping ${path} because it matches ${exclusion} as exclusion filter.");
+                        _log.Debug($"Skipping ${fullPath} because it matches ${exclusion} as exclusion filter.");
                         return;
                     }
                 }
                 
-                var fileAttr = File.GetAttributes(Path.GetFullPath(path));
+                var fileAttr = File.GetAttributes(fullPath);
 
                 if ((fileAttr & FileAttributes.Directory) != 0)
                 {
-                    DiscoverDirectory(Path.GetFullPath(path), exclusions);
+                    DiscoverDirectory(fullPath, exclusions);
                 }
                 else
                 {
-                    QueueMessage(Path.GetFullPath(path));
+                    QueueMessage(fullPath);
                 }
             }
             catch (FileNotFoundException)
