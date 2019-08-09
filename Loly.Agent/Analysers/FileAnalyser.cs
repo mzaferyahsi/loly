@@ -30,6 +30,11 @@ namespace Loly.Agent.Analysers
                 _log.Warn($"Unable to find {path}");
                 return null;
             }
+            catch (DirectoryNotFoundException)
+            {
+                _log.Warn($"Unable to find {path}");
+                return null;
+            }
             catch (Exception e)
             {
                 _log.Error(e);
@@ -44,7 +49,7 @@ namespace Loly.Agent.Analysers
                 var fsFileInfo = new DirectoryInfo(path);
 
                 if (!fsFileInfo.Exists)
-                    throw new FileNotFoundException();
+                    throw new DirectoryNotFoundException();
 
                 var mimeType = MimeGuesser.GuessMimeType(path);
 
