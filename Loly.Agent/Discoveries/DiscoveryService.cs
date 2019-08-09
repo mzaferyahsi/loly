@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -15,9 +14,9 @@ namespace Loly.Agent.Discoveries
 {
     public class DiscoveryService : IDiscoveryService, IDisposable
     {
-        private readonly ILog _log = LogManager.GetLogger(typeof(DiscoveryService));
-        private readonly IKafkaProducerQueue _kafkaProducerQueue;
         private readonly IKafkaProducerHostedService _kafkaProducerHostedService;
+        private readonly IKafkaProducerQueue _kafkaProducerQueue;
+        private readonly ILog _log = LogManager.GetLogger(typeof(DiscoveryService));
 
         public DiscoveryService(IKafkaProducerHostedService kafkaProducerHostedService)
         {
@@ -32,7 +31,7 @@ namespace Loly.Agent.Discoveries
 
             return task;
         }
-        
+
         public virtual Task GetDiscoverTask(string path, IList<string> exclusions)
         {
             var task = new Task(() => Discover(path, exclusions));
@@ -42,7 +41,7 @@ namespace Loly.Agent.Discoveries
 
         public void Discover(string path)
         {
-            Discover(path, 
+            Discover(path,
                 new List<string>());
         }
 
@@ -52,28 +51,25 @@ namespace Loly.Agent.Discoveries
             {
                 path = PathResolver.Resolve(path);
                 var fullPath = Path.GetFullPath(path);
-                
+
                 ResolveExclusions(exclusions);
 
                 foreach (var exclusion in exclusions)
                 {
                     var shouldExclude = Regex.IsMatch(fullPath, exclusion, RegexOptions.IgnoreCase);
-                    if(shouldExclude) {
+                    if (shouldExclude)
+                    {
                         _log.Debug($"Skipping ${fullPath} because it matches ${exclusion} as exclusion filter.");
                         return;
                     }
                 }
-                
+
                 var fileAttr = File.GetAttributes(fullPath);
 
                 if ((fileAttr & FileAttributes.Directory) != 0)
-                {
                     DiscoverDirectory(fullPath, exclusions);
-                }
                 else
-                {
                     QueueMessage(fullPath);
-                }
             }
             catch (FileNotFoundException)
             {
@@ -81,10 +77,16 @@ namespace Loly.Agent.Discoveries
             }
         }
 
+        public void Dispose()
+        {
+            _kafkaProducerHostedService.StopAsync(CancellationToken.None);
+            _kafkaProducerHostedService?.Dispose();
+        }
+
         private static void ResolveExclusions(IList<string> exclusions)
         {
-            if(exclusions.Any(x=> x.Contains("~/"))) {
-                
+            if (exclusions.Any(x => x.Contains("~/")))
+            {
                 var homePathExclusions = new List<string>();
                 homePathExclusions.AddRange(exclusions.Where(x => x.Contains("~/")).ToArray());
 
@@ -94,13 +96,12 @@ namespace Loly.Agent.Discoveries
 
                     exclusions.Add(homePathExclusion.Replace("~/", PathResolver.Resolve("~/")));
                 }
-                
             }
         }
 
         private void QueueMessage(string path)
         {
-            var message = new KafkaMessage()
+            var message = new KafkaMessage
             {
                 Topic = "loly-discovered",
                 Message = path
@@ -118,12 +119,13 @@ namespace Loly.Agent.Discoveries
                 foreach (var exclusion in exclusions)
                 {
                     var shouldExclude = Regex.IsMatch(path, exclusion, RegexOptions.IgnoreCase);
-                    if(shouldExclude) {
+                    if (shouldExclude)
+                    {
                         _log.Debug($"Skipping ${path} because it matches ${exclusion} as exclusion filter.");
                         return;
                     }
                 }
-                
+
                 QueueMessage(path);
 
                 var di = new DirectoryInfo(path);
@@ -132,19 +134,12 @@ namespace Loly.Agent.Discoveries
 
                 files.ForEach(file => { Discover(file, exclusions); });
                 directories.ForEach(directory => { Discover(directory, exclusions); });
-
             }
             catch (UnauthorizedAccessException e)
             {
                 _log.WarnFormat("Unable to access {0} due to authorization error", path);
                 _log.Warn(e);
             }
-        }
-
-        public void Dispose()
-        {
-            _kafkaProducerHostedService.StopAsync(CancellationToken.None);
-            _kafkaProducerHostedService?.Dispose();
         }
     }
 }

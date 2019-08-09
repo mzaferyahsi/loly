@@ -1,10 +1,8 @@
 using System;
 using System.IO;
-using System.Threading.Tasks;
 using HeyRed.Mime;
 using log4net;
 using Loly.Agent.Models;
-using Loly.Agent.Utility;
 
 namespace Loly.Agent.Analysers
 {
@@ -12,16 +10,16 @@ namespace Loly.Agent.Analysers
     {
         private readonly ILog _log = LogManager.GetLogger(typeof(FileAnalyser));
 
-        public async Task<FileInformation> Analyse(string path)
+        public FileInformation Analyse(string path)
         {
             try
             {
                 path = path.Trim('\"');
                 var fileAttr = File.GetAttributes(path);
 
-                FileInformation information = (fileAttr & FileAttributes.Directory) != 0
+                var information = (fileAttr & FileAttributes.Directory) != 0
                     ? GetDirectoryInformation(Path.GetFullPath(path))
-                    : await GetFileInformation(Path.GetFullPath(path));
+                    : GetFileInformation(Path.GetFullPath(path));
 
                 return information;
             }
@@ -53,7 +51,7 @@ namespace Loly.Agent.Analysers
 
                 var mimeType = MimeGuesser.GuessMimeType(path);
 
-                var fileInfo = new FileInformation()
+                var fileInfo = new FileInformation
                 {
                     Name = fsFileInfo.Name,
                     Extension = fsFileInfo.Extension,
@@ -73,7 +71,7 @@ namespace Loly.Agent.Analysers
             }
         }
 
-        private async Task<FileInformation> GetFileInformation(string path)
+        private FileInformation GetFileInformation(string path)
         {
             try
             {
@@ -84,9 +82,8 @@ namespace Loly.Agent.Analysers
 
                 var mimeType = MimeGuesser.GuessMimeType(path);
 
-                string hash = await FileHash.GetMD5Hash(path);
 
-                var fileInfo = new FileInformation()
+                var fileInfo = new FileInformation
                 {
                     Name = fsFileInfo.Name,
                     Extension = fsFileInfo.Extension,
@@ -94,8 +91,7 @@ namespace Loly.Agent.Analysers
                     ModifiedDate = fsFileInfo.LastWriteTimeUtc,
                     Size = fsFileInfo.Length,
                     Path = path,
-                    MimeType = mimeType,
-                    Hash = hash
+                    MimeType = mimeType
                 };
 
                 return fileInfo;

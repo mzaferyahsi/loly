@@ -1,6 +1,5 @@
 using System;
 using Confluent.Kafka;
-using log4net;
 using Microsoft.Extensions.Options;
 
 namespace Loly.Kafka
@@ -24,7 +23,7 @@ namespace Loly.Kafka
 
         public ConsumerConfig GetConsumerConfig()
         {
-            return new ConsumerConfig()
+            return new ConsumerConfig
             {
                 GroupId = _settings.Consumer.GroupId,
                 BootstrapServers = _settings.BootstrapServers,
@@ -35,7 +34,7 @@ namespace Loly.Kafka
 
         public ProducerConfig GetProducerConfig()
         {
-            return new ProducerConfig()
+            return new ProducerConfig
             {
                 BootstrapServers = _settings.BootstrapServers
             };

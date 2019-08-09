@@ -8,8 +8,8 @@ namespace Loly.Agent.Utility
         {
             if (path.StartsWith("~/"))
             {
-                string homePath = (Environment.OSVersion.Platform == PlatformID.Unix ||
-                                   Environment.OSVersion.Platform == PlatformID.MacOSX)
+                var homePath = Environment.OSVersion.Platform == PlatformID.Unix ||
+                               Environment.OSVersion.Platform == PlatformID.MacOSX
                     ? Environment.GetEnvironmentVariable("HOME")
                     : Environment.ExpandEnvironmentVariables("%HOMEDRIVE%%HOMEPATH%");
                 path = path.Replace("~", homePath);

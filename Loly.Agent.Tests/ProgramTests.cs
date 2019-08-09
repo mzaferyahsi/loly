@@ -1,22 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Hangfire;
-using Loly.Agent.Discoveries;
-using Loly.Agent.Discovery;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Builder.Internal;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server.Features;
-using Microsoft.AspNetCore.Http.Features;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Internal;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Primitives;
-using Microsoft.Extensions.Options;
-using Moq;
 using Xunit;
 
 namespace Loly.Agent.Tests
@@ -59,4 +40,3 @@ namespace Loly.Agent.Tests
 //        }
     }
 }
-

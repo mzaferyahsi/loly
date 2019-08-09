@@ -4,5 +4,10 @@
     "Consumer": {
       "GroupId" : "loly-agent"
     }
+  },
+  "Features": {
+    "Discover": false,
+    "AnalyseFile": true,
+    "AnalyseFileHash": true
   }
 }

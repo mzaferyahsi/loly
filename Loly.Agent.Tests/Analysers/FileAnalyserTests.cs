@@ -6,28 +6,28 @@ namespace Loly.Agent.Tests.Analysers
     public class FileAnalyserTests
     {
         [Fact]
-        public async void AnalyseTest()
+        public void AnalyseDirectoryTest()
         {
             var analyser = new FileAnalyser();
-            var fileInfo = await analyser.Analyse("./Loly.Agent.Tests.dll");
+            var fileInfo = analyser.Analyse("./");
+            Assert.NotNull(fileInfo);
+        }
+
+        [Fact]
+        public void AnalyseFileNotFoundTest()
+        {
+            var analyser = new FileAnalyser();
+            var fileInfo = analyser.Analyse("./.notfound");
+            Assert.Null(fileInfo);
+        }
+
+        [Fact]
+        public void AnalyseTest()
+        {
+            var analyser = new FileAnalyser();
+            var fileInfo = analyser.Analyse("./Loly.Agent.Tests.dll");
             Assert.NotNull(fileInfo);
             Assert.Equal("application/x-dosexec", fileInfo.MimeType);
-        }
-        
-        [Fact]
-        public async void AnalyseDirectoryTest()
-        {
-            var analyser = new FileAnalyser();
-            var fileInfo = await analyser.Analyse("./");
-            Assert.NotNull(fileInfo);
-        }
-        
-        [Fact]
-        public async void AnalyseFileNotFoundTest()
-        {
-            var analyser = new FileAnalyser();
-            var fileInfo = await analyser.Analyse("./.notfound");
-            Assert.Null(fileInfo);
         }
     }
 }

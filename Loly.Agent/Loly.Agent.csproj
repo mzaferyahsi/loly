@@ -46,4 +46,8 @@
       <ProjectReference Include="..\Loly.Kafka\Loly.Kafka.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Kafka" />
+    </ItemGroup>
+
 </Project>

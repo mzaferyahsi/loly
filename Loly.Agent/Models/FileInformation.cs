@@ -17,7 +17,8 @@ namespace Loly.Agent.Models
         public DateTime CratedDate { get; set; }
         public DateTime ModifiedDate { get; set; }
         public string MimeType { get; set; }
-        public string Hash { get; set; }
         public Dictionary<string, string> MetaData { get; set; }
+
+        public string Id { get; set; }
     }
 }

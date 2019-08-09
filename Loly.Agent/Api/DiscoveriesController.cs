@@ -1,12 +1,12 @@
-using Loly.Agent.Models;
-using Microsoft.AspNetCore.Mvc;
 using System;
-using System.Threading.Tasks;
-using Hangfire;
 using log4net;
+using Loly.Agent.Configuration;
 using Loly.Agent.Controllers;
 using Loly.Agent.Discovery;
+using Loly.Agent.Models;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace Loly.Agent.Api
 {
@@ -16,18 +16,26 @@ namespace Loly.Agent.Api
     [Produces("application/json")]
     public class DiscoveriesController : LolyControllerBase
     {
-        private readonly ILog _log = LogManager.GetLogger(typeof(DiscoveriesController));
         private readonly IDiscoveryService _discoveryService;
+        private readonly ILog _log = LogManager.GetLogger(typeof(DiscoveriesController));
+        private LolyFeatureManager _featureManager;
 
-        public DiscoveriesController(IDiscoveryService service)
+        public DiscoveriesController(IDiscoveryService service, LolyFeatureManager featureManager)
         {
-            this._discoveryService = service;
+            _discoveryService = service;
+            _featureManager = featureManager;
         }
 
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public ActionResult Post(Models.Discovery discovery)
         {
+            if (!_featureManager.IsDiscoverEnabled())
+            {
+                return InternalServerErrorResult("POSTDISCDIS01", "Discovery feature is disabled.", Severity.Error);
+            }
+            
             try
             {
                 var task = _discoveryService.GetDiscoverTask(discovery.Path, discovery.Exclusions);

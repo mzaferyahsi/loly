@@ -1,48 +1,52 @@
 using System;
-using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Loly.Agent.Api;
-using Loly.Agent.Controllers;
+using Loly.Agent.Configuration;
 using Loly.Agent.Discovery;
-using Loly.Kafka;
-using Loly.Agent.Models;
+using Loly.Agent.ErrorResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using Xunit;
 using Moq;
-using System.Threading;
-using Loly.Agent.ErrorResults;
+using Xunit;
 
 namespace Loly.Agent.Tests.Api
 {
     public class DiscoveriesControllerTests
     {
-        [Fact]
-        public void PostTest()
+        
+        LolyFeatureManager _featureManager = new LolyFeatureManager(new OptionsWrapper<LolyFeatureConfiguration>(new LolyFeatureConfiguration()
         {
-            var taskExecuted = false;
-            var discovery = new Models.Discovery() { Path = "./" };
-            var task = new Task(() => { taskExecuted = true; });
-            var mock = Mock.Of<IDiscoveryService>(l => l.GetDiscoverTask("./") == task && l.GetDiscoverTask("./", null) == task );
-
-            var controller = new DiscoveriesController(mock);
-            var result = controller.Post(discovery);
-            Assert.IsType<CreatedResult>(result);
-            Thread.Sleep(100);
-            Assert.True(taskExecuted);
-        }
+            Discover = true
+        }));
 
         [Fact]
         public void PostFailTest()
         {
-            var discovery = new Models.Discovery() { Path = "./" };
+            var discovery = new Models.Discovery {Path = "./"};
             var mock = new Mock<IDiscoveryService>();
             mock.Setup(x => x.GetDiscoverTask("./")).Throws(new Exception("Error!"));
             mock.Setup(x => x.GetDiscoverTask("./", null)).Throws(new Exception("Error!"));
 
-            var controller = new DiscoveriesController(mock.Object);
+            var controller = new DiscoveriesController(mock.Object, _featureManager);
             var result = controller.Post(discovery);
             Assert.IsType<InternalServerErrorResult>(result);
+        }
+
+        [Fact]
+        public void PostTest()
+        {
+            var taskExecuted = false;
+            var discovery = new Models.Discovery {Path = "./"};
+            var task = new Task(() => { taskExecuted = true; });
+            var mock = Mock.Of<IDiscoveryService>(l =>
+                l.GetDiscoverTask("./") == task && l.GetDiscoverTask("./", null) == task);
+
+            var controller = new DiscoveriesController(mock, _featureManager);
+            var result = controller.Post(discovery);
+            Assert.IsType<CreatedResult>(result);
+            Thread.Sleep(100);
+            Assert.True(taskExecuted);
         }
     }
 }

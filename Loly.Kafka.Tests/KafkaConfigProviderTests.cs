@@ -9,10 +9,10 @@ namespace Loly.Agent.Tests.Kafka
         [Fact]
         public void ConstructorTest()
         {
-            var configOptions = Options.Create(new KafkaSettings()
+            var configOptions = Options.Create(new KafkaSettings
             {
                 BootstrapServers = "localhost:9092",
-                Consumer = new KafkaConsumerConfig()
+                Consumer = new KafkaConsumerConfig
                 {
                     GroupId = "loly-agent"
                 }
@@ -24,10 +24,10 @@ namespace Loly.Agent.Tests.Kafka
         [Fact]
         public void GetConsumerConfigTest()
         {
-            var configOptions = Options.Create(new KafkaSettings()
+            var configOptions = Options.Create(new KafkaSettings
             {
                 BootstrapServers = "localhost:9092",
-                Consumer = new KafkaConsumerConfig()
+                Consumer = new KafkaConsumerConfig
                 {
                     GroupId = "loly-agent"
                 }
@@ -43,10 +43,10 @@ namespace Loly.Agent.Tests.Kafka
         [Fact]
         public void GetProducerConfigTest()
         {
-            var configOptions = Options.Create(new KafkaSettings()
+            var configOptions = Options.Create(new KafkaSettings
             {
                 BootstrapServers = "localhost:9092",
-                Consumer = new KafkaConsumerConfig()
+                Consumer = new KafkaConsumerConfig
                 {
                     GroupId = "loly-agent"
                 }

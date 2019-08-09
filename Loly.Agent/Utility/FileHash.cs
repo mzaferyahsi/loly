@@ -1,12 +1,17 @@
 using System;
 using System.IO;
-using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Loly.Agent.Utility
 {
+    public enum HashMethods
+    {
+        Sha1,
+        Md5
+    }
+
     public static class FileHash
     {
         public static async Task<string> GetSha1Hash(string path)
@@ -21,10 +26,10 @@ namespace Loly.Agent.Utility
 
         public static async Task<string> GetHash<T>(string path) where T : HashAlgorithm
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
 
-            MethodInfo create = typeof(T).GetMethod("Create", new Type[] { });
-            using (T crypt = (T) create.Invoke(null, null))
+            var create = typeof(T).GetMethod("Create", new Type[] { });
+            using (var crypt = (T) create.Invoke(null, null))
             {
                 using (var fileStream = File.OpenRead(path))
                 {

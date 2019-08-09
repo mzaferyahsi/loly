@@ -5,7 +5,6 @@ using Confluent.Kafka;
 using log4net;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
-using Error = Confluent.Kafka.Error;
 
 namespace Loly.Kafka
 {
@@ -16,18 +15,18 @@ namespace Loly.Kafka
 
     public class KafkaProducerHostedService : IKafkaProducerHostedService, IDisposable
     {
-        protected readonly ILog _log = LogManager.GetLogger(typeof(KafkaProducerHostedService));
         private readonly IKafkaConfigProducer _configProducer;
-        private Timer _timer;
+        protected readonly ILog _log = LogManager.GetLogger(typeof(KafkaProducerHostedService));
+        private bool _isPublishing;
         private Thread _thread;
-        private bool _isPublishing = false;
+        private Timer _timer;
 
         public KafkaProducerHostedService(IKafkaConfigProducer configProducer)
         {
             _configProducer = configProducer;
             Queue = new KafkaProducerQueue();
         }
-        
+
         public KafkaProducerHostedService(IKafkaConfigProducer configProducer, IKafkaProducerQueue queue)
         {
             _configProducer = configProducer;
@@ -35,6 +34,25 @@ namespace Loly.Kafka
         }
 
         public IKafkaProducerQueue Queue { get; set; }
+
+        public Task StartAsync(CancellationToken cancellationToken)
+        {
+            Schedule();
+            return Task.CompletedTask;
+        }
+
+
+        public Task StopAsync(CancellationToken cancellationToken)
+        {
+            UnSchedule();
+            return Task.CompletedTask;
+        }
+
+        public void Dispose()
+        {
+            UnSchedule();
+            _timer?.Dispose();
+        }
 
         private void Schedule()
         {
@@ -44,13 +62,12 @@ namespace Loly.Kafka
             _thread = new Thread(() =>
             {
                 _log.Debug("Scheduling producer.");
-                _timer = new Timer((state) =>
+                _timer = new Timer(state =>
                 {
 //                    _log.Debug("Timer ticked..");
                     Publish();
                 }, null, TimeSpan.Zero, TimeSpan.FromSeconds(5));
                 _log.Debug("Producer scheduled.");
-                
             });
             _thread.Start();
         }
@@ -68,7 +85,7 @@ namespace Loly.Kafka
             if (error.IsFatal)
             {
                 _log.Fatal(error.Reason);
-                this.StopAsync(CancellationToken.None);
+                StopAsync(CancellationToken.None);
             }
             else if (error.IsError)
             {
@@ -106,11 +123,11 @@ namespace Loly.Kafka
 
         protected async void Publish()
         {
-            if(_isPublishing)
+            if (_isPublishing)
                 return;
 
             var hasMessage = Queue.TryPeek(out var message);
-            
+
             if (!hasMessage)
                 return;
 
@@ -140,14 +157,12 @@ namespace Loly.Kafka
                                         : (string) message.Message
                                 });
 //                            _log.Debug($"Published ${message.Message.ToString()}");
-
                         }
                         catch (ProduceException<Null, string> e)
                         {
                             _log.Error($"Failed to deliver message: {e.Error.Reason}");
                         }
                     } while (Queue.TryPeek(out message));
-
                 }
             }
             catch (Exception e)
@@ -158,41 +173,17 @@ namespace Loly.Kafka
             {
                 _isPublishing = false;
             }
-
         }
 
         private void UnSchedule()
         {
-            
             _log.Debug("Un-scheduling producer.");
             _timer?.Change(Timeout.Infinite, 0);
-            if (_thread != null && _thread.IsAlive)
-            {
-                _thread.Abort();
-            }
+            if (_thread != null && _thread.IsAlive) _thread.Abort();
 
             _timer = null;
             _thread = null;
             _log.Debug("Producer un-scheduled.");
-        }
-
-        public Task StartAsync(CancellationToken cancellationToken)
-        {
-            Schedule();
-            return Task.CompletedTask;
-        }
-
-
-        public Task StopAsync(CancellationToken cancellationToken)
-        {
-            UnSchedule();
-            return Task.CompletedTask;
-        }
-
-        public void Dispose()
-        {
-            UnSchedule();
-            _timer?.Dispose();
         }
     }
 }

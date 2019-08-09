@@ -20,11 +20,6 @@ namespace Loly.Kafka
             _configProducer = configProducer;
         }
 
-        private ConsumerBuilder<TKey, TValue> GetConsumerBuilder<TKey, TValue>()
-        {
-            return new ConsumerBuilder<TKey, TValue>(_configProducer.GetConsumerConfig());
-        }
-
         public IConsumer<TKey, TValue> GetConsumer<TKey, TValue>()
         {
             var consumerBuilder = GetConsumerBuilder<TKey, TValue>();
@@ -41,6 +36,11 @@ namespace Loly.Kafka
                 consumerBuilder.SetLogHandler(logHandler);
 
             return consumerBuilder.Build();
+        }
+
+        private ConsumerBuilder<TKey, TValue> GetConsumerBuilder<TKey, TValue>()
+        {
+            return new ConsumerBuilder<TKey, TValue>(_configProducer.GetConsumerConfig());
         }
     }
 }
