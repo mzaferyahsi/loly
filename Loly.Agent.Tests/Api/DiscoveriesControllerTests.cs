@@ -28,7 +28,7 @@ namespace Loly.Agent.Tests.Api
             var controller = new DiscoveriesController(mock);
             var result = controller.Post(discovery);
             Assert.IsType<CreatedResult>(result);
-            Thread.Sleep(50);
+            Thread.Sleep(100);
             Assert.True(taskExecuted);
         }
 
