@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Confluent.Kafka;
@@ -108,9 +109,9 @@ namespace Loly.Agent.Analysers
                     while (!_cancellationTokenSource.IsCancellationRequested)
                     {
                         var cr = _consumer.Consume(CancellationToken.None);
-//                        _log.Debug($"Received {cr.Value} for analyse.");
+                        _consumer.Pause(new List<TopicPartition>() {cr.TopicPartition});
                         var fileInfo = await _analyser.Analyse(cr.Value);
-//                        _log.Debug($"Analyse result as {JsonConvert.SerializeObject(fileInfo)}");
+                        _consumer.Resume(new List<TopicPartition>() {cr.TopicPartition});
     
                         if (fileInfo != null)
                             ProduceMessage(fileInfo);
