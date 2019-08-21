@@ -135,10 +135,23 @@ namespace Loly.Agent.Analysers
         public virtual void DeinitialiseConsumer()
         {
             _log.Debug("De-initializing kafka consumer for file analyser.");
-            if (_consumer != null)
+            try
             {
-                _consumer.Close();
+                if (_consumer != null)
+                {
+                    _consumer.Close();
+                    _consumer = null;
+                }
+            }
+            catch (KafkaException e)
+            {
+                _log.Warn(e);
                 _consumer = null;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
             }
 
             if (_consumeTask != null)
