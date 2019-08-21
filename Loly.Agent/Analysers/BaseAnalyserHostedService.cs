@@ -146,12 +146,15 @@ namespace Loly.Agent.Analysers
             catch (KafkaException e)
             {
                 _log.Warn(e);
-                _consumer = null;
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
                 throw;
+            }
+            finally
+            {
+                _consumer = null;
             }
 
             if (_consumeTask != null)
