@@ -61,7 +61,7 @@ namespace Loly.Agent.Analysers
                 var fileAttr = File.GetAttributes(resolvedPath);
                 if ((fileAttr & FileAttributes.Directory) != 0) return string.Empty;
 
-                var hash = await FileHash.GetMD5Hash(path);
+                var hash = await FileHash.GetSha256Hash(path);
                 return hash;
             }
             catch (FileNotFoundException)

@@ -20,5 +20,19 @@ namespace Loly.Agent.Tests.Utility
             Assert.IsType<string>(hash);
             Assert.NotEqual(string.Empty, hash);
         }
+        [Fact]
+        public async void HashWithSHA256Test()
+        {
+            var hash = await FileHash.GetSha256Hash("./Loly.Agent.Tests.dll");
+            Assert.IsType<string>(hash);
+            Assert.NotEqual(string.Empty, hash);
+        }
+        [Fact]
+        public async void HashWithSHA512Test()
+        {
+            var hash = await FileHash.GetSha512Hash("./Loly.Agent.Tests.dll");
+            Assert.IsType<string>(hash);
+            Assert.NotEqual(string.Empty, hash);
+        }
     }
 }

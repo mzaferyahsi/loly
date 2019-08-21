@@ -14,6 +14,15 @@ namespace Loly.Agent.Utility
 
     public static class FileHash
     {
+        public static async Task<string> GetSha256Hash(string path)
+        {
+            return await GetHash<SHA256>(path);
+        }
+
+        public static async Task<string> GetSha512Hash(string path)
+        {
+            return await GetHash<SHA512>(path);
+        }
         public static async Task<string> GetSha1Hash(string path)
         {
             return await GetHash<SHA1>(path);
