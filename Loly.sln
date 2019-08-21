@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Loly.Kafka", "Loly.Kafka\Lo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Loly.Kafka.Tests", "Loly.Kafka.Tests\Loly.Kafka.Tests.csproj", "{57AAEC4A-D1A0-48A3-A067-027A611465BD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Loly.Models", "Loly.Models\Loly.Models.csproj", "{9578776A-884D-4DFF-A923-C51738834287}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -79,5 +81,19 @@ Global
 		{57AAEC4A-D1A0-48A3-A067-027A611465BD}.Release|x86.ActiveCfg = Release|Any CPU
 		{57AAEC4A-D1A0-48A3-A067-027A611465BD}.Release|x86.Build.0 = Release|Any CPU
 		{57AAEC4A-D1A0-48A3-A067-027A611465BD}.ReleaseAgent|Any CPU.ActiveCfg = ReleaseAgent|Any CPU
+		{9578776A-884D-4DFF-A923-C51738834287}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9578776A-884D-4DFF-A923-C51738834287}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9578776A-884D-4DFF-A923-C51738834287}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{9578776A-884D-4DFF-A923-C51738834287}.Debug|x64.Build.0 = Debug|Any CPU
+		{9578776A-884D-4DFF-A923-C51738834287}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{9578776A-884D-4DFF-A923-C51738834287}.Debug|x86.Build.0 = Debug|Any CPU
+		{9578776A-884D-4DFF-A923-C51738834287}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9578776A-884D-4DFF-A923-C51738834287}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9578776A-884D-4DFF-A923-C51738834287}.Release|x64.ActiveCfg = Release|Any CPU
+		{9578776A-884D-4DFF-A923-C51738834287}.Release|x64.Build.0 = Release|Any CPU
+		{9578776A-884D-4DFF-A923-C51738834287}.Release|x86.ActiveCfg = Release|Any CPU
+		{9578776A-884D-4DFF-A923-C51738834287}.Release|x86.Build.0 = Release|Any CPU
+		{9578776A-884D-4DFF-A923-C51738834287}.ReleaseAgent|Any CPU.ActiveCfg = Debug|Any CPU
+		{9578776A-884D-4DFF-A923-C51738834287}.ReleaseAgent|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -3,10 +3,9 @@ using log4net;
 using Loly.Agent.Configuration;
 using Loly.Agent.Controllers;
 using Loly.Agent.Discovery;
-using Loly.Agent.Models;
+using Loly.Models.Api;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 
 namespace Loly.Agent.Api
 {
@@ -29,7 +28,7 @@ namespace Loly.Agent.Api
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public ActionResult Post(Models.Discovery discovery)
+        public ActionResult Post(Models.Api.Discovery discovery)
         {
             if (!_featureManager.IsDiscoverEnabled())
             {

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Loly.Agent.Models
+namespace Loly.Models
 {
     public class FileInformation
     {

@@ -1,9 +1,10 @@
 using System.Threading.Tasks;
 using Confluent.Kafka;
 using Loly.Agent.Configuration;
-using Loly.Agent.Models;
+using Loly.Models;
 using Loly.Agent.Utility;
 using Loly.Kafka;
+using Loly.Models.Messages;
 
 namespace Loly.Agent.Analysers
 {

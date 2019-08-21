@@ -23,7 +23,7 @@ namespace Loly.Agent.Tests.Api
         [Fact]
         public void PostFailTest()
         {
-            var discovery = new Models.Discovery {Path = "./"};
+            var discovery = new Models.Api.Discovery {Path = "./"};
             var mock = new Mock<IDiscoveryService>();
             mock.Setup(x => x.GetDiscoverTask("./")).Throws(new Exception("Error!"));
             mock.Setup(x => x.GetDiscoverTask("./", null)).Throws(new Exception("Error!"));
@@ -37,7 +37,7 @@ namespace Loly.Agent.Tests.Api
         public void PostTest()
         {
             var taskExecuted = false;
-            var discovery = new Models.Discovery {Path = "./"};
+            var discovery = new Models.Api.Discovery {Path = "./"};
             var task = new Task(() => { taskExecuted = true; });
             var mock = Mock.Of<IDiscoveryService>(l =>
                 l.GetDiscoverTask("./") == task && l.GetDiscoverTask("./", null) == task);

@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Confluent.Kafka;
 using Loly.Agent.Configuration;
-using Loly.Agent.Models;
+using Loly.Models;
 using Loly.Kafka;
 
 namespace Loly.Agent.Analysers

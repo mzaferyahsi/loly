@@ -1,4 +1,4 @@
-namespace Loly.Agent.Models
+namespace Loly.Models
 {
     public enum FileMetadataTypes
     {

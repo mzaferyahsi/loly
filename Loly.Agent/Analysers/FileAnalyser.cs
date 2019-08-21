@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using HeyRed.Mime;
 using log4net;
-using Loly.Agent.Models;
+using Loly.Models;
 
 namespace Loly.Agent.Analysers
 {

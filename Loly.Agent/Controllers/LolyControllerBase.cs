@@ -1,5 +1,5 @@
 using Loly.Agent.ErrorResults;
-using Loly.Agent.Models;
+using Loly.Models.Api;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Loly.Agent.Controllers

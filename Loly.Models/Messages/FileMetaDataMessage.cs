@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Loly.Agent.Models
+namespace Loly.Models.Messages
 {
     public class FileMetaDataMessage
     {
