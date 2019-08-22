@@ -8,7 +8,7 @@ namespace Loly.Agent.Configuration
         
         public LolyFeatureManager(IOptions<LolyFeatureConfiguration> configuration)
         {
-            if (configuration.Value == null)
+            if (configuration == null || configuration.Value == null)
                 _configuration = new LolyFeatureConfiguration()
                 {
                     Discover = true,

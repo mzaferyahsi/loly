@@ -15,10 +15,7 @@ namespace Loly.Agent.Tests.Api
     public class DiscoveriesControllerTests
     {
         
-        LolyFeatureManager _featureManager = new LolyFeatureManager(new OptionsWrapper<LolyFeatureConfiguration>(new LolyFeatureConfiguration()
-        {
-            Discover = true
-        }));
+        LolyFeatureManager _featureManager = new LolyFeatureManager(null);
 
         [Fact]
         public void PostFailTest()
