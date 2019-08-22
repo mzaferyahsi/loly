@@ -8,10 +8,12 @@ WORKDIR /app
 COPY ./*.sln ./
 COPY ./Loly.Models/*.csproj ./Loly.Models/
 RUN cd Loly.Models && dotnet clean && dotnet restore && cd ..
-COPY ./Loly.Agent/*.csproj ./Loly.Agent/
-RUN cd Loly.Agent && dotnet clean && dotnet restore && cd ..
+COPY ./Loly.Analysers/*.csproj ./Loly.Analysers/
+RUN cd Loly.Analysers && dotnet clean && dotnet restore && cd ..
 COPY ./Loly.Kafka/*.csproj ./Loly.Kafka/
 RUN cd Loly.Kafka && dotnet clean && dotnet restore && cd ..
+COPY ./Loly.Agent/*.csproj ./Loly.Agent/
+RUN cd Loly.Agent && dotnet clean && dotnet restore && cd ..
 
 # copy everything else and build app
 COPY . ./

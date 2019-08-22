@@ -1,7 +1,6 @@
-using Loly.Agent.Analysers;
 using Xunit;
 
-namespace Loly.Agent.Tests.Analysers
+namespace Loly.Analysers.Tests
 {
     public class FileAnalyserTests
     {
@@ -25,7 +24,7 @@ namespace Loly.Agent.Tests.Analysers
         public void AnalyseTest()
         {
             var analyser = new FileAnalyser();
-            var fileInfo = analyser.Analyse("./Loly.Agent.Tests.dll");
+            var fileInfo = analyser.Analyse(GetType().Assembly.Location);
             Assert.NotNull(fileInfo);
             Assert.Equal("application/x-dosexec", fileInfo.MimeType);
         }

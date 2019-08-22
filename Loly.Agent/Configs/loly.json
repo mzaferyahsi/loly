@@ -1,12 +1,12 @@
 {
   "Kafka": {
-    "BootstrapServers" : "localhost:9092",
+    "BootstrapServers" : "localhost:9094",
     "Consumer": {
       "GroupId" : "loly-agent"
     }
   },
   "Features": {
-    "Discover": false,
+    "Discover": true,
     "AnalyseFile": true,
     "AnalyseFileHash": true
   }

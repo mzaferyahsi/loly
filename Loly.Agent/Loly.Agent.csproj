@@ -43,6 +43,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Loly.Analysers\Loly.Analysers.csproj" />
       <ProjectReference Include="..\Loly.Kafka\Loly.Kafka.csproj" />
       <ProjectReference Include="..\Loly.Models\Loly.Models.csproj" />
     </ItemGroup>

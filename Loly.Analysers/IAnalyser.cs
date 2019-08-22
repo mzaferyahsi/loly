@@ -1,4 +1,4 @@
-namespace Loly.Agent.Analysers
+namespace Loly.Analysers
 {
     public interface IAnalyser
     {

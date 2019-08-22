@@ -8,6 +8,7 @@ using Loly.Agent.Analysers;
 using Loly.Agent.Configuration;
 using Loly.Agent.Discoveries;
 using Loly.Agent.Discovery;
+using Loly.Analysers;
 using Loly.Kafka;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -91,7 +92,8 @@ namespace Loly.Agent
             try
             {
                 var isDockerEnv = Environment.GetEnvironmentVariable("IS_DOCKER");
-                if (bool.Parse(isDockerEnv))
+                
+                if (!String.IsNullOrEmpty(isDockerEnv) && bool.Parse(isDockerEnv))
                 {
                     var osPath = string.Empty;
                     if (OperatingSystem.IsLinux())

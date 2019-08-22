@@ -33,7 +33,7 @@ namespace Loly.Agent.Analysers
             _kafkaProducerHostedService.StartAsync(_cancellationTokenSource.Token);
         }
 
-        public abstract string ConsumerTopic { get; }
+        public abstract List<string> ConsumerTopic { get; }
 
         public bool Enabled
         {
@@ -108,11 +108,12 @@ namespace Loly.Agent.Analysers
 
         public void StartConsumer()
         {
-            _log.Debug("Initializing kafka consumer for {this.GetType().Name}.");
-            if (_consumer != null)
+            _log.Debug($"Starting kafka consumer for {this.GetType().Name}.");
+            if (_consumer == null)
             {
-                _log.Warn("There's already an initialized kafka consumer for {this.GetType().Name}.");
-                DeinitialiseConsumer();
+                var message = $"Consumer not initialized for {this.GetType().Name}.";
+                _log.Warn(message);
+                throw new Exception(message);
             }
 
             _consumeTask = Task.Run(async () =>
@@ -122,10 +123,13 @@ namespace Loly.Agent.Analysers
 
                 while (!_cancellationTokenSource.IsCancellationRequested)
                 {
-                    var cr = _consumer.Consume(CancellationToken.None);
-                    _consumer.Pause(new List<TopicPartition> {cr.TopicPartition});
-                    await Consume(cr);
-                    _consumer.Resume(new List<TopicPartition> {cr.TopicPartition});
+                    var cr = _consumer.Consume(_cancellationTokenSource.Token);
+                    if (!cr.IsPartitionEOF)
+                    {
+                        _consumer.Pause(new List<TopicPartition> {cr.TopicPartition});
+                        await Consume(cr);
+                        _consumer.Resume(new List<TopicPartition> {cr.TopicPartition});
+                    }
                 }
             }, _cancellationTokenSource.Token);
 

@@ -1,8 +1,10 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Confluent.Kafka;
 using Loly.Agent.Configuration;
 using Loly.Models;
 using Loly.Agent.Utility;
+using Loly.Analysers;
 using Loly.Kafka;
 using Loly.Models.Messages;
 
@@ -19,7 +21,7 @@ namespace Loly.Agent.Analysers
             }
         }
 
-        public override string ConsumerTopic => "loly-files";
+        public override List<string> ConsumerTopic => new List<string>() {"loly-files"};
 
         private void ProduceFileHashMessage(FileInformation fileInformation, string hash)
         {

@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using log4net;
 using Loly.Agent.Utility;
 
-namespace Loly.Agent.Analysers
+namespace Loly.Analysers
 {
     public class FileHashAnalyser : IAnalyser
     {

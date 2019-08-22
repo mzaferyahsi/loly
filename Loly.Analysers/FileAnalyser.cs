@@ -4,7 +4,7 @@ using HeyRed.Mime;
 using log4net;
 using Loly.Models;
 
-namespace Loly.Agent.Analysers
+namespace Loly.Analysers
 {
     public class FileAnalyser : IAnalyser
     {

@@ -3,6 +3,7 @@ using System.Threading;
 using Confluent.Kafka;
 using Loly.Agent.Analysers;
 using Loly.Agent.Configuration;
+using Loly.Analysers;
 using Loly.Kafka;
 using Microsoft.Extensions.Options;
 using Moq;

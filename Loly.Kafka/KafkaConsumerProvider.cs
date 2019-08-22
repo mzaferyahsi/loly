@@ -1,5 +1,6 @@
 using System;
 using Confluent.Kafka;
+using Confluent.Kafka.SyncOverAsync;
 
 namespace Loly.Kafka
 {
@@ -34,6 +35,18 @@ namespace Loly.Kafka
                 consumerBuilder.SetErrorHandler(errorHandler);
             if (logHandler != null)
                 consumerBuilder.SetLogHandler(logHandler);
+
+            if (!typeof(TKey).IsPrimitive)
+            {
+                consumerBuilder.SetValueDeserializer(
+                    new SyncOverAsyncDeserializer<TValue>(new JsonDeserializer<TValue>()));
+            }
+
+            if (!typeof(TValue).IsPrimitive)
+            {
+                consumerBuilder.SetKeyDeserializer(
+                    new SyncOverAsyncDeserializer<TKey>(new JsonDeserializer<TKey>()));
+            }
 
             return consumerBuilder.Build();
         }
