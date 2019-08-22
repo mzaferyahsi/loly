@@ -30,7 +30,7 @@ namespace Loly.Agent.Tests.Api
             Assert.IsType<InternalServerErrorResult>(result);
         }
 
-        [Fact]
+        [Fact(Timeout = 300)]
         public void PostTest()
         {
             var taskExecuted = false;
@@ -42,7 +42,10 @@ namespace Loly.Agent.Tests.Api
             var controller = new DiscoveriesController(mock, _featureManager);
             var result = controller.Post(discovery);
             Assert.IsType<CreatedResult>(result);
-            Thread.Sleep(100);
+            while (!taskExecuted)
+            {
+                Thread.Sleep(10);
+            }
             Assert.True(taskExecuted);
         }
     }
