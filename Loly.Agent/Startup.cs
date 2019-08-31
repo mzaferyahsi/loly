@@ -8,8 +8,12 @@ using Loly.Agent.Analysers;
 using Loly.Agent.Configuration;
 using Loly.Agent.Discoveries;
 using Loly.Agent.Discovery;
+using Loly.Agent.Kafka;
 using Loly.Analysers;
 using Loly.Kafka;
+using Loly.Kafka.Config;
+using Loly.Kafka.Consumer;
+using Loly.Kafka.Settings;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server.Features;
@@ -61,14 +65,15 @@ namespace Loly.Agent
 
             services.Configure<KafkaSettings>(Configuration.GetSection("Kafka"));
             services.Configure<LolyFeatureConfiguration>(Configuration.GetSection("Features"));
-            services.AddTransient<IKafkaConfigProducer, KafkaConfigProvider>();
-            services.AddTransient<IKafkaProducerHostedService, KafkaProducerHostedService>();
-            services.AddSingleton<IKafkaConsumerProvider, KafkaConsumerProvider>();
+            services.AddTransient<IConfigProducer, ConfigProvider>();
+//            services.AddTransient<IProducerHostedService, ProducerService>();
+            services.AddSingleton<IConsumerProvider, ConsumerProvider>();
             services.AddSingleton<LolyFeatureManager>();
             services.AddSingleton<IDiscoveryService, DiscoveryService>();
             services.AddSingleton<FileAnalyser>();
-            services.AddHostedService<FileAnalyserHostedService>();
             services.AddSingleton<FileHashAnalyser>();
+
+            services.AddHostedService<FileAnalyserHostedService>();
             services.AddHostedService<FileHashAnalyserHostedService>();
         }
 

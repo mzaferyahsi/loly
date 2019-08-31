@@ -5,24 +5,28 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Confluent.Kafka;
 using log4net;
 using Loly.Agent.Discovery;
-using Loly.Agent.Utility;
-using Loly.Kafka;
+using Loly.Agent.Kafka;
+using Loly.Analysers.Utility;
+using Loly.Kafka.Config;
+using Loly.Kafka.Models;
+using Loly.Kafka.Producer;
 
 namespace Loly.Agent.Discoveries
 {
     public class DiscoveryService : IDiscoveryService, IDisposable
     {
-        private readonly IKafkaProducerHostedService _kafkaProducerHostedService;
-        private readonly IKafkaProducerQueue _kafkaProducerQueue;
+        private readonly IProducerService<string, string> _kafkaProducerService;
+        private readonly IProducerQueue<string, string> _kafkaProducerQueue;
         private readonly ILog _log = LogManager.GetLogger(typeof(DiscoveryService));
 
-        public DiscoveryService(IKafkaProducerHostedService kafkaProducerHostedService)
+        public DiscoveryService(IConfigProducer configProducer)
         {
-            _kafkaProducerHostedService = kafkaProducerHostedService;
-            _kafkaProducerQueue = _kafkaProducerHostedService.Queue;
-            _kafkaProducerHostedService.StartAsync(CancellationToken.None);
+            _kafkaProducerService = new ProducerService<string, string>(configProducer, _log);
+            _kafkaProducerQueue = _kafkaProducerService.Queue;
+            _kafkaProducerService.Start(CancellationToken.None);
         }
 
         public virtual Task GetDiscoverTask(string path)
@@ -79,8 +83,8 @@ namespace Loly.Agent.Discoveries
 
         public void Dispose()
         {
-            _kafkaProducerHostedService.StopAsync(CancellationToken.None);
-            _kafkaProducerHostedService?.Dispose();
+            _kafkaProducerService.Stop(CancellationToken.None);
+            _kafkaProducerService?.Dispose();
         }
 
         private static void ResolveExclusions(IList<string> exclusions)
@@ -101,10 +105,14 @@ namespace Loly.Agent.Discoveries
 
         private void QueueMessage(string path)
         {
-            var message = new KafkaMessage
+            var message = new KafkaMessage<string, string>
             {
                 Topic = "loly-discovered",
-                Message = path
+                Message = new Message<string, string>()
+                {
+                    Key = path,
+                    Value = path
+                }
             };
 
             _kafkaProducerQueue.Enqueue(message);

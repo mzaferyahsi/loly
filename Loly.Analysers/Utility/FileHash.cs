@@ -4,26 +4,28 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Loly.Agent.Utility
+namespace Loly.Analysers.Utility
 {
     public enum HashMethods
     {
-        Sha1,
-        Md5
+        SHA1,
+        Md5,
+        SHA256,
+        SHA512
     }
 
     public static class FileHash
     {
-        public static async Task<string> GetSha256Hash(string path)
+        public static async Task<string> GetSHA256Hash(string path)
         {
             return await GetHash<SHA256>(path);
         }
 
-        public static async Task<string> GetSha512Hash(string path)
+        public static async Task<string> GetSHA512Hash(string path)
         {
             return await GetHash<SHA512>(path);
         }
-        public static async Task<string> GetSha1Hash(string path)
+        public static async Task<string> GetSHA1Hash(string path)
         {
             return await GetHash<SHA1>(path);
         }

@@ -1,22 +1,16 @@
 using System;
 using Confluent.Kafka;
+using Loly.Kafka.Settings;
 using Microsoft.Extensions.Options;
 
-namespace Loly.Kafka
+namespace Loly.Kafka.Config
 {
-    public interface IKafkaConfigProducer
-    {
-        ConsumerConfig GetConsumerConfig();
-
-        ProducerConfig GetProducerConfig();
-    }
-
-    public class KafkaConfigProvider : IKafkaConfigProducer
+    public class ConfigProvider : IConfigProducer
     {
         private readonly KafkaSettings _settings;
 //        private ILog _log = LogManager.GetLogger(typeof(KafkaConfigProvider));
 
-        public KafkaConfigProvider(IOptions<KafkaSettings> settings)
+        public ConfigProvider(IOptions<KafkaSettings> settings)
         {
             _settings = settings.Value;
         }

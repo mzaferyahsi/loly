@@ -1,5 +1,5 @@
 using System.IO;
-using Loly.Agent.Utility;
+using Loly.Analysers.Utility;
 
 namespace Loly.Agent.Tests.Helpers
 {

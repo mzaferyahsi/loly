@@ -1,4 +1,4 @@
-using Loly.Agent.Utility;
+using Loly.Analysers.Utility;
 using Xunit;
 
 namespace Loly.Analysers.Tests.Utility
@@ -16,21 +16,21 @@ namespace Loly.Analysers.Tests.Utility
         [Fact]
         public async void HashWithSha1Test()
         {
-            var hash = await FileHash.GetSha1Hash(GetType().Assembly.Location);
+            var hash = await FileHash.GetSHA1Hash(GetType().Assembly.Location);
             Assert.IsType<string>(hash);
             Assert.NotEqual(string.Empty, hash);
         }
         [Fact]
         public async void HashWithSha256Test()
         {
-            var hash = await FileHash.GetSha256Hash(GetType().Assembly.Location);
+            var hash = await FileHash.GetSHA256Hash(GetType().Assembly.Location);
             Assert.IsType<string>(hash);
             Assert.NotEqual(string.Empty, hash);
         }
         [Fact]
         public async void HashWithSha512Test()
         {
-            var hash = await FileHash.GetSha512Hash(GetType().Assembly.Location);
+            var hash = await FileHash.GetSHA512Hash(GetType().Assembly.Location);
             Assert.IsType<string>(hash);
             Assert.NotEqual(string.Empty, hash);
         }

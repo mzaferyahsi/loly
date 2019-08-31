@@ -1,4 +1,6 @@
 using Loly.Kafka;
+using Loly.Kafka.Config;
+using Loly.Kafka.Settings;
 using Microsoft.Extensions.Options;
 using Xunit;
 
@@ -18,7 +20,7 @@ namespace Loly.Agent.Tests.Kafka
                 }
             });
 
-            var configProvider = new KafkaConfigProvider(configOptions);
+            var configProvider = new ConfigProvider(configOptions);
         }
 
         [Fact]
@@ -33,7 +35,7 @@ namespace Loly.Agent.Tests.Kafka
                 }
             });
 
-            var configProvider = new KafkaConfigProvider(configOptions);
+            var configProvider = new ConfigProvider(configOptions);
             var consumerconfig = configProvider.GetConsumerConfig();
 
             Assert.Equal("localhost:9092", consumerconfig.BootstrapServers);
@@ -52,7 +54,7 @@ namespace Loly.Agent.Tests.Kafka
                 }
             });
 
-            var configProvider = new KafkaConfigProvider(configOptions);
+            var configProvider = new ConfigProvider(configOptions);
             var producerConfig = configProvider.GetProducerConfig();
 
             Assert.Equal("localhost:9092", producerConfig.BootstrapServers);

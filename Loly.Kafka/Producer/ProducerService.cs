@@ -2,47 +2,49 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Confluent.Kafka;
+using Confluent.Kafka.SyncOverAsync;
 using log4net;
-using Microsoft.Extensions.Hosting;
+using Loly.Kafka;
+using Loly.Kafka.Config;
+using Loly.Kafka.Json;
+using Loly.Kafka.Producer;
+using Loly.Kafka.Utilities;
 using Newtonsoft.Json;
 
-namespace Loly.Kafka
+namespace Loly.Agent.Kafka
 {
-    public interface IKafkaProducerHostedService : IHostedService, IDisposable
+    public class ProducerService<TKey, TValue> : IProducerService<TKey, TValue>
     {
-        IKafkaProducerQueue Queue { get; set; }
-    }
-
-    public class KafkaProducerHostedService : IKafkaProducerHostedService, IDisposable
-    {
-        private readonly IKafkaConfigProducer _configProducer;
-        protected readonly ILog _log = LogManager.GetLogger(typeof(KafkaProducerHostedService));
+        private readonly IConfigProducer _configProducer;
+        protected readonly ILog _log;
         private bool _isPublishing;
-        private Thread _thread;
+        private Task _task;
         private Timer _timer;
+        private CancellationTokenSource _cancellationTokenSource;
 
-        public KafkaProducerHostedService(IKafkaConfigProducer configProducer)
+        public ProducerService(IConfigProducer configProducer, ILog logger)
+            : this(configProducer, new KafkaProducerQueue<TKey, TValue>(), logger)
         {
-            _configProducer = configProducer;
-            Queue = new KafkaProducerQueue();
         }
 
-        public KafkaProducerHostedService(IKafkaConfigProducer configProducer, IKafkaProducerQueue queue)
+        public ProducerService(IConfigProducer configProducer, IProducerQueue<TKey, TValue> queue, ILog logger)
         {
             _configProducer = configProducer;
+            _log = logger;
             Queue = queue;
+            _cancellationTokenSource = new CancellationTokenSource();
         }
 
-        public IKafkaProducerQueue Queue { get; set; }
+        public IProducerQueue<TKey, TValue> Queue { get; set; }
 
-        public Task StartAsync(CancellationToken cancellationToken)
+        public Task Start(CancellationToken cancellationToken)
         {
             Schedule();
             return Task.CompletedTask;
         }
 
 
-        public Task StopAsync(CancellationToken cancellationToken)
+        public Task Stop(CancellationToken cancellationToken)
         {
             UnSchedule();
             return Task.CompletedTask;
@@ -58,43 +60,55 @@ namespace Loly.Kafka
         {
             if (_timer != null)
                 return;
-
-            _thread = new Thread(() =>
+            
+            _timer = new Timer(state =>
             {
-                _log.Debug("Scheduling producer.");
-                _timer = new Timer(state =>
+                if(_task != null && !_task.IsCompleted)
+                    return;
+                
+                _task = new Task(() =>
                 {
-//                    _log.Debug("Timer ticked..");
+                    _log.Debug("Timer ticked..");
                     Publish();
-                }, null, TimeSpan.Zero, TimeSpan.FromSeconds(5));
-                _log.Debug("Producer scheduled.");
-            });
-            _thread.Start();
+                }, _cancellationTokenSource.Token);
+                _task.Start();
+            }, null, TimeSpan.Zero, TimeSpan.FromSeconds(5));
+            
         }
 
-        protected virtual IProducer<Null, string> GetProducer()
+        protected virtual IProducer<TKey, TValue> GetProducer()
         {
-            var producerBuilder = new ProducerBuilder<Null, string>(_configProducer.GetProducerConfig());
+            var producerBuilder = new ProducerBuilder<TKey, TValue>(_configProducer.GetProducerConfig());
             producerBuilder.SetLogHandler(LogHandler);
             producerBuilder.SetErrorHandler(ErrorHandler);
+
+            if (!Serialization.KafkaCanSerialize(typeof(TKey)))
+            {
+                producerBuilder.SetKeySerializer(new JsonSerializer<TKey>());
+            }
+
+            if (!Serialization.KafkaCanSerialize(typeof(TValue)))
+            {
+                producerBuilder.SetValueSerializer(new JsonSerializer<TValue>());
+            }
+            
             return producerBuilder.Build();
         }
 
-        protected virtual void ErrorHandler(IProducer<Null, string> producer, Error error)
+        protected virtual void ErrorHandler(IProducer<TKey, TValue> producer, Error error)
         {
             if (error.IsFatal)
             {
                 _log.Fatal(error.Reason);
-                StopAsync(CancellationToken.None);
+                Stop(CancellationToken.None);
             }
             else if (error.IsError)
             {
                 _log.Error(error.Reason);
-//                this.StopAsync(CancellationToken.None);
             }
         }
 
-        protected virtual void LogHandler(IProducer<Null, string> producer, LogMessage logMessage)
+        protected virtual void LogHandler(IProducer<TKey, TValue> producer, LogMessage logMessage)
         {
             switch (logMessage.Level)
             {
@@ -123,55 +137,36 @@ namespace Loly.Kafka
 
         protected async void Publish()
         {
-            if (_isPublishing)
-                return;
-
-            var hasMessage = Queue.TryPeek(out var message);
-
-            if (!hasMessage)
+            if (Queue.IsEmpty)
                 return;
 
             try
             {
-                _isPublishing = true;
                 using (var p = GetProducer())
                 {
                     do
                     {
-                        var dequeueResult = Queue.TryDequeue(out message);
+                        var dequeueResult = Queue.TryDequeue(out var message);
                         if (!dequeueResult)
                         {
                             _log.Debug("No message found to publish.");
-                            hasMessage = false;
                             break;
                         }
 
                         try
                         {
-//                            _log.Debug($"Publishing ${message.Message.ToString()}");
-                            await p.ProduceAsync(message.Topic,
-                                new Message<Null, string>
-                                {
-                                    Value = message.Message.GetType() != typeof(string)
-                                        ? JsonConvert.SerializeObject(message.Message)
-                                        : (string) message.Message
-                                });
-//                            _log.Debug($"Published ${message.Message.ToString()}");
+                            await p.ProduceAsync(message.Topic, message.Message);
                         }
-                        catch (ProduceException<Null, string> e)
+                        catch (ProduceException<TKey, TValue> e)
                         {
                             _log.Error($"Failed to deliver message: {e.Error.Reason}");
                         }
-                    } while (Queue.TryPeek(out message));
+                    } while (!Queue.IsEmpty);
                 }
             }
             catch (Exception e)
             {
                 _log.Error(e);
-            }
-            finally
-            {
-                _isPublishing = false;
             }
         }
 
@@ -179,10 +174,10 @@ namespace Loly.Kafka
         {
             _log.Debug("Un-scheduling producer.");
             _timer?.Change(Timeout.Infinite, 0);
-            if (_thread != null && _thread.IsAlive) _thread.Abort();
+            if (_task != null && _task.Status == TaskStatus.Running) _cancellationTokenSource.Cancel();
 
             _timer = null;
-            _thread = null;
+            _task = null;
             _log.Debug("Producer un-scheduled.");
         }
     }

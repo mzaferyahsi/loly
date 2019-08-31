@@ -10,7 +10,7 @@ namespace Loly.Models.Messages
         }
 
         public string Path { get; set; }
-        public string FileId { get; set; }
+//        public string FileId { get; set; }
         public Dictionary<string, string> MetaData { get; set; }
     }
 }

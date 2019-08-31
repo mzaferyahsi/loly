@@ -1,6 +1,6 @@
 using System;
 
-namespace Loly.Agent.Utility
+namespace Loly.Analysers.Utility
 {
     public class PathResolver
     {

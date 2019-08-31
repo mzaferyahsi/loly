@@ -2,12 +2,11 @@ using System;
 using System.Text;
 using System.Threading.Tasks;
 using Confluent.Kafka;
-using log4net.ElasticSearch;
 using Newtonsoft.Json;
 
-namespace Loly.Kafka
+namespace Loly.Kafka.Json
 {
-    public class JsonDeserializer<T> : IAsyncDeserializer<T>
+    public class AsyncJsonDeserializer<T> : IAsyncDeserializer<T>
     {
         public Task<T> DeserializeAsync(ReadOnlyMemory<byte> data, bool isNull, SerializationContext context)
         {

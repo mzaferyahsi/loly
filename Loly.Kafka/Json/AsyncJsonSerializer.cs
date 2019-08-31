@@ -3,9 +3,9 @@ using System.Threading.Tasks;
 using Confluent.Kafka;
 using Newtonsoft.Json;
 
-namespace Loly.Kafka
+namespace Loly.Kafka.Json
 {
-    public class JsonSerializer<T> : IAsyncSerializer<T>
+    public class AsyncJsonSerializer<T> : IAsyncSerializer<T>
     {
         public Task<byte[]> SerializeAsync(T data, SerializationContext context)
         {
