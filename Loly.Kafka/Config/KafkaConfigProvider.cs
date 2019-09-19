@@ -8,7 +8,7 @@ namespace Loly.Kafka.Config
     public class ConfigProvider : IConfigProducer
     {
         private readonly KafkaSettings _settings;
-//        private ILog _log = LogManager.GetLogger(typeof(KafkaConfigProvider));
+//        private ILogger _log = LogManager.GetLogger(typeof(KafkaConfigProvider));
 
         public ConfigProvider(IOptions<KafkaSettings> settings)
         {

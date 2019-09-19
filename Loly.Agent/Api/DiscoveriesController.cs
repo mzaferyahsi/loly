@@ -6,6 +6,7 @@ using Loly.Agent.Discovery;
 using Loly.Models.Api;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace Loly.Agent.Api
 {
@@ -16,11 +17,12 @@ namespace Loly.Agent.Api
     public class DiscoveriesController : LolyControllerBase
     {
         private readonly IDiscoveryService _discoveryService;
-        private readonly ILog _log = LogManager.GetLogger(typeof(DiscoveriesController));
+        private readonly ILogger _log;
         private LolyFeatureManager _featureManager;
 
-        public DiscoveriesController(IDiscoveryService service, LolyFeatureManager featureManager)
+        public DiscoveriesController(IDiscoveryService service, LolyFeatureManager featureManager, ILogger<DiscoveriesController> logger)
         {
+            _log = logger;
             _discoveryService = service;
             _featureManager = featureManager;
         }
@@ -43,7 +45,7 @@ namespace Loly.Agent.Api
             }
             catch (Exception e)
             {
-                _log.Error(e);
+                _log.LogError(e, "Unable to start discovery.");
                 return InternalServerErrorResult("POSTDISC01", $"Unable to create discovery for path {discovery.Path}",
                     Severity.Error);
             }

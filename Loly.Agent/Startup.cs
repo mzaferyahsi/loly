@@ -1,16 +1,15 @@
 ﻿using System;
 using System.IO;
 using System.Runtime.InteropServices;
+using Elastic.Apm.AspNetCore;
+using Elastic.Apm.NetCoreAll;
 using Hangfire;
 using HeyRed.Mime;
-using log4net;
 using Loly.Agent.Analysers;
 using Loly.Agent.Configuration;
 using Loly.Agent.Discoveries;
 using Loly.Agent.Discovery;
-using Loly.Agent.Kafka;
 using Loly.Analysers;
-using Loly.Kafka;
 using Loly.Kafka.Config;
 using Loly.Kafka.Consumer;
 using Loly.Kafka.Settings;
@@ -18,14 +17,18 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using Serilog;
+using Serilog.Configuration;
+using Serilog.Events;
+using Serilog.Exceptions;
+using Serilog.Formatting.Elasticsearch;
+using Serilog.Sinks.Elasticsearch;
 
 namespace Loly.Agent
 {
@@ -48,6 +51,31 @@ namespace Loly.Agent
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            var loggerConfiguration = new LoggerConfiguration()
+                .Enrich.FromLogContext()
+                .Enrich.WithExceptionDetails();
+            
+            EnvironmentLoggerConfigurationExtensions.WithMachineName(loggerConfiguration.Enrich);
+            
+            var elasticConfig = Configuration.GetSection("Elasticsearch").Get<ElasticsearchConfiguration>();
+            if (elasticConfig != null)
+            {
+                Console.WriteLine("Elasticsearch configuration found.");
+                Console.WriteLine($"Elasticsearch Uri is {elasticConfig.Uri}");
+                
+                loggerConfiguration.WriteTo.Elasticsearch(new ElasticsearchSinkOptions(new Uri(elasticConfig.Uri))
+                {
+                    AutoRegisterTemplate = true,
+                    AutoRegisterTemplateVersion = AutoRegisterTemplateVersion.ESv6,
+                    IndexFormat = "loly-logs-{0:yyyy.MM.dd}",
+                    MinimumLogEventLevel = LogEventLevel.Debug
+                });
+            }
+
+            loggerConfiguration
+                .WriteTo.Console(new ElasticsearchJsonFormatter()); 
+            Log.Logger = loggerConfiguration.CreateLogger();
+            
             services.AddMvc()
                 .SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
                 .AddJsonOptions(options =>
@@ -57,13 +85,14 @@ namespace Loly.Agent
                     options.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
                 });
             ;
+                        
             services.AddHangfire(configuration => configuration
-                .UseLog4NetLogProvider());
-
+                .UseSerilogLogProvider());
 
             services.AddOptions();
 
             services.Configure<KafkaSettings>(Configuration.GetSection("Kafka"));
+            services.Configure<ElasticsearchConfiguration>(Configuration.GetSection("Elasticsearch"));
             services.Configure<LolyFeatureConfiguration>(Configuration.GetSection("Features"));
             services.AddTransient<IConfigProducer, ConfigProvider>();
 //            services.AddTransient<IProducerHostedService, ProducerService>();
@@ -80,19 +109,22 @@ namespace Loly.Agent
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
+            app.UseElasticApm(Configuration);
+
             if (env.IsDevelopment())
                 app.UseDeveloperExceptionPage();
             else
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
 
-            loggerFactory.AddLog4Net("Configs/log4net.config");
+            loggerFactory.AddSerilog();
+//            loggerFactory.AddLog4Net("Configs/log4net.config");
             app.UseHttpsRedirection();
             app.UseMvc();
 
-            var log = LogManager.GetLogger(typeof(Program));
+            var log = loggerFactory.CreateLogger<Startup>();
             var serverAddressesFeature = app.ServerFeatures.Get<IServerAddressesFeature>();
-            log.InfoFormat("Application started at {0}", string.Join(", ", serverAddressesFeature.Addresses));
+            log.LogInformation($"Application started at {string.Join(", ", serverAddressesFeature.Addresses)}");
 
             try
             {
@@ -115,9 +147,9 @@ namespace Loly.Agent
                     MimeGuesser.MagicFilePath = path;
                 }
             }
-            catch (ArgumentNullException e)
+            catch (ArgumentNullException)
             {
-                log.Debug(e);
+                log.LogDebug("Docker environment not set.");
             }
         }
     }

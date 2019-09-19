@@ -20,12 +20,19 @@ COPY . ./
 RUN dotnet publish -c ReleaseAgent -o out
 
 
-FROM mcr.microsoft.com/dotnet/core/aspnet:2.2 AS runtime
+FROM mcr.microsoft.com/dotnet/core/aspnet:2.2-bionic AS runtime
 WORKDIR /app
 COPY --from=build /app/Loly.Agent/out ./
+RUN mkdir /usr/share/ca-certificates/yahsi/
+COPY Docker/yahsi-root-ca.crt  /usr/share/ca-certificates/yahsi/yahsi-root-ca.crt
+RUN echo "yahsi/yahsi-root-ca.crt" >> /etc/ca-certificates.conf
+COPY Docker/yahsi-tls-ca.crt  /usr/share/ca-certificates/yahsi/yahsi-tls-ca.crt
+RUN echo "yahsi/yahsi-tls-ca.crt" >> /etc/ca-certificates.conf
+RUN update-ca-certificates
 RUN rm ./*.Development.json
-# RUN apt-get update && apt-get install apt-utils -y && apt-get install libmagic1 -y
-#RUN apt-get update && apt-get install htop -y
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install apt-utils -yq --no-install-recommends
+#RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install htop -yq
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install iputils-ping -yq --no-install-recommends
 ENV IS_DOCKER=true
 
 VOLUME [ "/app/Configs" ]

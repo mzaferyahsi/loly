@@ -1,14 +1,19 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using log4net;
 using Loly.Analysers.Utility;
+using Microsoft.Extensions.Logging;
 
 namespace Loly.Analysers
 {
     public class FileHashAnalyser : IAnalyser
     {
-        private readonly ILog _log = LogManager.GetLogger(typeof(FileHashAnalyser));
+        private readonly ILogger _log;
+
+        public FileHashAnalyser( ILogger<FileHashAnalyser> logger)
+        {
+            this._log = logger;
+        }
 
         public async Task<string> Analyse(HashMethods method, string path)
         {
@@ -41,17 +46,17 @@ namespace Loly.Analysers
             }
             catch (FileNotFoundException)
             {
-                _log.Warn($"Unable to find {path}");
+                _log.LogWarning($"Unable to find {path}");
                 return null;
             }
             catch (DirectoryNotFoundException)
             {
-                _log.Warn($"Unable to find {path}");
+                _log.LogWarning($"Unable to find {path}");
                 return null;
             }
             catch (Exception e)
             {
-                _log.Error(e);
+                _log.LogError(e, "Error when generating file hash");
                 return null;
             }
         }
@@ -70,17 +75,17 @@ namespace Loly.Analysers
             }
             catch (FileNotFoundException)
             {
-                _log.Warn($"Unable to find {path}");
+                _log.LogWarning($"Unable to find {path}");
                 return null;
             }
             catch (DirectoryNotFoundException)
             {
-                _log.Warn($"Unable to find {path}");
+                _log.LogWarning($"Unable to find {path}");
                 return null;
             }
             catch (Exception e)
             {
-                _log.Error(e);
+                _log.LogError(e, "Error when generating file hash");
                 return null;
             }
         }
@@ -99,17 +104,17 @@ namespace Loly.Analysers
             }
             catch (FileNotFoundException)
             {
-                _log.Warn($"Unable to find {path}");
+                _log.LogWarning($"Unable to find {path}");
                 return null;
             }
             catch (DirectoryNotFoundException)
             {
-                _log.Warn($"Unable to find {path}");
+                _log.LogWarning($"Unable to find {path}");
                 return null;
             }
             catch (Exception e)
             {
-                _log.Error(e);
+                _log.LogError(e, "Error when generating file hash");
                 return null;
             }
         }
@@ -128,17 +133,17 @@ namespace Loly.Analysers
             }
             catch (FileNotFoundException)
             {
-                _log.Warn($"Unable to find {path}");
+                _log.LogWarning($"Unable to find {path}");
                 return null;
             }
             catch (DirectoryNotFoundException)
             {
-                _log.Warn($"Unable to find {path}");
+                _log.LogWarning($"Unable to find {path}");
                 return null;
             }
             catch (Exception e)
             {
-                _log.Error(e);
+                _log.LogError(e, "Error when generating file hash");
                 return null;
             }
         }

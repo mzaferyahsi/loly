@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Confluent.Kafka;
 using log4net;
+using Loly.Agent.Configuration;
 using Loly.Agent.Kafka;
 using Loly.Analysers;
 using Loly.Kafka;
@@ -15,12 +16,13 @@ using Loly.Kafka.Services;
 using Loly.Models;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace Loly.Agent.Analysers
 {
     public class FileAnalyserHostedService : IHostedService
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof(FileAnalyserHostedService));
+        private readonly ILogger _log;
         private ConsumerService<Ignore, string> _consumerService;
         private CancellationToken _cancellationtoken;
         private readonly FileAnalyser _analyser;
@@ -28,10 +30,14 @@ namespace Loly.Agent.Analysers
         private readonly IProducerService<string, FileInformation> _producerService;
         private readonly IProducerQueue<string, FileInformation> _producerQueue;
         private readonly IConfigProducer _configProducer;
+        private readonly LolyFeatureManager _featureManager;
 
         public FileAnalyserHostedService(FileAnalyser analyser, IConsumerProvider consumerProvider,
-            IConfigProducer configProducer)
+            IConfigProducer configProducer, LolyFeatureManager featureManager,
+            ILogger<FileAnalyserHostedService> logger)
         {
+            _featureManager = featureManager;
+            _log = logger;
             _analyser = analyser;
             _consumerProvider = consumerProvider;
             _configProducer = configProducer;
@@ -60,6 +66,7 @@ namespace Loly.Agent.Analysers
             var cr = args.ConsumeResult;
             
             consumer.Pause(new List<TopicPartition>() {cr.TopicPartition});
+            _log.LogDebug($"Analysing file for {cr.Value}");
             var result = _analyser.Analyse(cr.Value);
             
             if (result != null)
@@ -73,6 +80,10 @@ namespace Loly.Agent.Analysers
                     },
                     Topic = "loly-files"
                 });
+            }
+            else
+            {
+                _log.LogDebug($"Cannot analyse file {cr.Value}");
             }
             
             consumer.Commit(cr);
@@ -91,11 +102,11 @@ namespace Loly.Agent.Analysers
                 }
                 catch (Exception e)
                 {
-                    _log.Error(e);
+                    _log.LogError(e, "Error when consuming message.");
                 }
                 finally
                 {
-                    _log.Warn("Re-Initializing Kafka Consumer");
+                    _log.LogWarning("Re-Initializing Kafka Consumer");
                     InitializeConsumerService();
                 }
             }
@@ -109,15 +120,19 @@ namespace Loly.Agent.Analysers
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            _cancellationtoken = cancellationToken;
-            _producerService.Start(_cancellationtoken);
-            _consumerService.Consume();
+            if (_featureManager.IsFileAnalyserEnabled())
+            {
+                _cancellationtoken = cancellationToken;
+                _producerService.Start(_cancellationtoken);
+                _consumerService.Consume();
+            }
             return Task.CompletedTask;
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            DeInitializeConsumerService();
+            if (_featureManager.IsFileAnalyserEnabled())
+                DeInitializeConsumerService();
             return Task.CompletedTask;
         }
     }

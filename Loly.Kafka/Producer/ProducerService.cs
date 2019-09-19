@@ -2,32 +2,29 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Confluent.Kafka;
-using Confluent.Kafka.SyncOverAsync;
-using log4net;
-using Loly.Kafka;
 using Loly.Kafka.Config;
 using Loly.Kafka.Json;
 using Loly.Kafka.Producer;
 using Loly.Kafka.Utilities;
-using Newtonsoft.Json;
+using Microsoft.Extensions.Logging;
 
 namespace Loly.Agent.Kafka
 {
     public class ProducerService<TKey, TValue> : IProducerService<TKey, TValue>
     {
         private readonly IConfigProducer _configProducer;
-        protected readonly ILog _log;
+        protected readonly ILogger _log;
         private bool _isPublishing;
         private Task _task;
         private Timer _timer;
         private CancellationTokenSource _cancellationTokenSource;
 
-        public ProducerService(IConfigProducer configProducer, ILog logger)
+        public ProducerService(IConfigProducer configProducer, ILogger logger)
             : this(configProducer, new KafkaProducerQueue<TKey, TValue>(), logger)
         {
         }
 
-        public ProducerService(IConfigProducer configProducer, IProducerQueue<TKey, TValue> queue, ILog logger)
+        public ProducerService(IConfigProducer configProducer, IProducerQueue<TKey, TValue> queue, ILogger logger)
         {
             _configProducer = configProducer;
             _log = logger;
@@ -68,7 +65,7 @@ namespace Loly.Agent.Kafka
                 
                 _task = new Task(() =>
                 {
-                    _log.Debug("Timer ticked..");
+//                    _log.LogDebug("Timer ticked..");
                     Publish();
                 }, _cancellationTokenSource.Token);
                 _task.Start();
@@ -99,12 +96,12 @@ namespace Loly.Agent.Kafka
         {
             if (error.IsFatal)
             {
-                _log.Fatal(error.Reason);
+                _log.LogCritical(error.Reason);
                 Stop(CancellationToken.None);
             }
             else if (error.IsError)
             {
-                _log.Error(error.Reason);
+                _log.LogError(error.Reason);
             }
         }
 
@@ -113,24 +110,24 @@ namespace Loly.Agent.Kafka
             switch (logMessage.Level)
             {
                 case SyslogLevel.Info:
-                    _log.Info(logMessage.Message);
+                    _log.LogInformation(logMessage.Message);
                     break;
                 case SyslogLevel.Alert:
                 case SyslogLevel.Warning:
-                    _log.Warn(logMessage.Message);
+                    _log.LogWarning(logMessage.Message);
                     break;
                 case SyslogLevel.Debug:
-                    _log.Debug(logMessage.Message);
+                    _log.LogDebug(logMessage.Message);
                     break;
                 case SyslogLevel.Error:
-                    _log.Error(logMessage.Message);
+                    _log.LogError(logMessage.Message);
                     break;
                 case SyslogLevel.Critical:
                 case SyslogLevel.Emergency:
-                    _log.Fatal(logMessage.Message);
+                    _log.LogCritical(logMessage.Message);
                     break;
                 default:
-                    _log.Info(logMessage.Message);
+                    _log.LogInformation(logMessage.Message);
                     break;
             }
         }
@@ -149,7 +146,7 @@ namespace Loly.Agent.Kafka
                         var dequeueResult = Queue.TryDequeue(out var message);
                         if (!dequeueResult)
                         {
-                            _log.Debug("No message found to publish.");
+                            _log.LogDebug("No message found to publish.");
                             break;
                         }
 
@@ -159,26 +156,26 @@ namespace Loly.Agent.Kafka
                         }
                         catch (ProduceException<TKey, TValue> e)
                         {
-                            _log.Error($"Failed to deliver message: {e.Error.Reason}");
+                            _log.LogError($"Failed to deliver message: {e.Error.Reason}");
                         }
                     } while (!Queue.IsEmpty);
                 }
             }
             catch (Exception e)
             {
-                _log.Error(e);
+                _log.LogError(e, "Error when producing kafka message.");
             }
         }
 
         private void UnSchedule()
         {
-            _log.Debug("Un-scheduling producer.");
+            _log.LogDebug("Un-scheduling producer.");
             _timer?.Change(Timeout.Infinite, 0);
             if (_task != null && _task.Status == TaskStatus.Running) _cancellationTokenSource.Cancel();
 
             _timer = null;
             _task = null;
-            _log.Debug("Producer un-scheduled.");
+            _log.LogDebug("Producer un-scheduled.");
         }
     }
 }

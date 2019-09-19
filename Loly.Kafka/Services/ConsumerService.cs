@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Confluent.Kafka;
-using log4net;
 using Loly.Kafka.Consumer;
 using Microsoft.Extensions.Logging;
 
@@ -12,7 +10,7 @@ namespace Loly.Kafka.Services
 {
     public class ConsumerService<TKey, TValue> : IDisposable
     {
-        private ILog _log;
+        private ILogger _log;
         private IConsumerProvider _consumerProvider;
         private Task _consumerTask;
         private IConsumer<TKey, TValue> _consumer;
@@ -29,7 +27,7 @@ namespace Loly.Kafka.Services
         public event ConsumerLogEventHandler ConsumerLog;
         public event ConsumerConsumeResultEventHandler ConsumeResult;
 
-        public ConsumerService(IConsumerProvider consumerProvider, List<string> topicList, ILog logger) 
+        public ConsumerService(IConsumerProvider consumerProvider, List<string> topicList, ILogger logger) 
             : this(consumerProvider, null, topicList,logger)
         {
             
@@ -37,7 +35,7 @@ namespace Loly.Kafka.Services
 
         public ConsumerService(IConsumerProvider consumerProvider, ConsumerConfig consumerConfig,
             List<string> topicList,
-            ILog logger)
+            ILogger logger)
         {
             _consumerConfig = consumerConfig;
             _consumerProvider = consumerProvider;
@@ -74,24 +72,24 @@ namespace Loly.Kafka.Services
                 switch (logMessage.Level)
                 {
                     case SyslogLevel.Info:
-                        _log.Info(logMessage.Message);
+                        _log.LogInformation(logMessage.Message);
                         break;
                     case SyslogLevel.Alert:
                     case SyslogLevel.Warning:
-                        _log.Warn(logMessage.Message);
+                        _log.LogWarning(logMessage.Message);
                         break;
                     case SyslogLevel.Debug:
-                        _log.Debug(logMessage.Message);
+                        _log.LogDebug(logMessage.Message);
                         break;
                     case SyslogLevel.Error:
-                        _log.Error(logMessage.Message);
+                        _log.LogError(logMessage.Message);
                         break;
                     case SyslogLevel.Critical:
                     case SyslogLevel.Emergency:
-                        _log.Fatal(logMessage.Message);
+                        _log.LogCritical(logMessage.Message);
                         break;
                     default:
-                        _log.Info(logMessage.Message);
+                        _log.LogInformation(logMessage.Message);
                         break;
                 }
             }

@@ -1,13 +1,13 @@
 using Confluent.Kafka;
-using log4net;
+using Microsoft.Extensions.Logging;
 
 namespace Loly.Kafka.Handlers
 {
     public class GenericLogHandler<TKey, TValue>
     {
-        private ILog _log;
+        private ILogger _log;
         
-        public GenericLogHandler(ILog log)
+        public GenericLogHandler(ILogger log)
         {
             _log = log;
         }
@@ -17,24 +17,24 @@ namespace Loly.Kafka.Handlers
             switch (logMessage.Level)
             {
                 case SyslogLevel.Info:
-                    _log.Info(logMessage.Message);
+                    _log.LogInformation(logMessage.Message);
                     break;
                 case SyslogLevel.Alert:
                 case SyslogLevel.Warning:
-                    _log.Warn(logMessage.Message);
+                    _log.LogWarning(logMessage.Message);
                     break;
                 case SyslogLevel.Debug:
-                    _log.Debug(logMessage.Message);
+                    _log.LogDebug(logMessage.Message);
                     break;
                 case SyslogLevel.Error:
-                    _log.Error(logMessage.Message);
+                    _log.LogError(logMessage.Message);
                     break;
                 case SyslogLevel.Critical:
                 case SyslogLevel.Emergency:
-                    _log.Fatal(logMessage.Message);
+                    _log.LogCritical(logMessage.Message);
                     break;
                 default:
-                    _log.Info(logMessage.Message);
+                    _log.LogInformation(logMessage.Message);
                     break;
             }
         }

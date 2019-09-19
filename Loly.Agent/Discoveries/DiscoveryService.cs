@@ -13,6 +13,7 @@ using Loly.Analysers.Utility;
 using Loly.Kafka.Config;
 using Loly.Kafka.Models;
 using Loly.Kafka.Producer;
+using Microsoft.Extensions.Logging;
 
 namespace Loly.Agent.Discoveries
 {
@@ -20,10 +21,11 @@ namespace Loly.Agent.Discoveries
     {
         private readonly IProducerService<string, string> _kafkaProducerService;
         private readonly IProducerQueue<string, string> _kafkaProducerQueue;
-        private readonly ILog _log = LogManager.GetLogger(typeof(DiscoveryService));
+        private readonly ILogger _log;
 
-        public DiscoveryService(IConfigProducer configProducer)
+        public DiscoveryService(IConfigProducer configProducer, ILogger<DiscoveryService> logger)
         {
+            _log = logger;
             _kafkaProducerService = new ProducerService<string, string>(configProducer, _log);
             _kafkaProducerQueue = _kafkaProducerService.Queue;
             _kafkaProducerService.Start(CancellationToken.None);
@@ -63,7 +65,7 @@ namespace Loly.Agent.Discoveries
                     var shouldExclude = Regex.IsMatch(fullPath, exclusion, RegexOptions.IgnoreCase);
                     if (shouldExclude)
                     {
-                        _log.Debug($"Skipping ${fullPath} because it matches ${exclusion} as exclusion filter.");
+                        _log.LogDebug($"Skipping ${fullPath} because it matches ${exclusion} as exclusion filter.");
                         return;
                     }
                 }
@@ -77,7 +79,7 @@ namespace Loly.Agent.Discoveries
             }
             catch (FileNotFoundException)
             {
-                _log.Warn($"{path} not found.");
+                _log.LogWarning($"{path} not found.");
             }
         }
 
@@ -129,7 +131,7 @@ namespace Loly.Agent.Discoveries
                     var shouldExclude = Regex.IsMatch(path, exclusion, RegexOptions.IgnoreCase);
                     if (shouldExclude)
                     {
-                        _log.Debug($"Skipping ${path} because it matches ${exclusion} as exclusion filter.");
+                        _log.LogDebug($"Skipping ${path} because it matches ${exclusion} as exclusion filter.");
                         return;
                     }
                 }
@@ -145,8 +147,11 @@ namespace Loly.Agent.Discoveries
             }
             catch (UnauthorizedAccessException e)
             {
-                _log.WarnFormat("Unable to access {0} due to authorization error", path);
-                _log.Warn(e);
+                _log.LogWarning(e, $"Unable to access {path} due to authorization error");
+            }
+            catch (Exception e)
+            {
+                _log.LogError($"Unable to discover directory {path}", e);
             }
         }
     }

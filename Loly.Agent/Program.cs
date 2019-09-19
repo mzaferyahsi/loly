@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace Loly.Agent
 {
@@ -17,7 +18,8 @@ namespace Loly.Agent
                 .UseStartup<Startup>()
                 .ConfigureLogging((context, logging) =>
                 {
-                    logging.AddLog4Net("Configs/log4net.config");
+                    logging.AddSerilog();
+//                    logging.AddLog4Net("Configs/log4net.config");
                     logging.SetMinimumLevel(LogLevel.Debug);
                 });
         }

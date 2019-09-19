@@ -9,7 +9,7 @@ namespace Loly.Kafka.Json
         public byte[] Serialize(T data, SerializationContext context)
         {
             var serializedObject = JsonConvert.SerializeObject(data);
-            return Encoding.ASCII.GetBytes(serializedObject);
+            return Encoding.UTF8.GetBytes(serializedObject);
         }
     }
 }

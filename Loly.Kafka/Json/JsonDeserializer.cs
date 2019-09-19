@@ -12,7 +12,7 @@ namespace Loly.Kafka.Json
             if (isNull)
                 return default(T);
 
-            var objectString = Encoding.ASCII.GetString(data.ToArray());
+            var objectString = Encoding.UTF8.GetString(data.ToArray());
             return JsonConvert.DeserializeObject<T>(objectString);
         }
     }

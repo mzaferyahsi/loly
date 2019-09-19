@@ -1,14 +1,19 @@
 using System;
 using System.IO;
 using HeyRed.Mime;
-using log4net;
 using Loly.Models;
+using Microsoft.Extensions.Logging;
 
 namespace Loly.Analysers
 {
     public class FileAnalyser : IAnalyser
     {
-        private readonly ILog _log = LogManager.GetLogger(typeof(FileAnalyser));
+        private readonly ILogger _log;
+
+        public FileAnalyser(ILogger<FileAnalyser> logger)
+        {
+            _log = logger;
+        }
 
         public FileInformation Analyse(string path)
         {
@@ -25,17 +30,17 @@ namespace Loly.Analysers
             }
             catch (FileNotFoundException)
             {
-                _log.Warn($"Unable to find {path}");
+                _log.LogWarning($"Unable to find {path}");
                 return null;
             }
             catch (DirectoryNotFoundException)
             {
-                _log.Warn($"Unable to find {path}");
+                _log.LogWarning($"Unable to find {path}");
                 return null;
             }
             catch (Exception e)
             {
-                _log.Error(e);
+                _log.LogError(e, "Error when analysing file.");
                 return null;
             }
         }
@@ -66,7 +71,7 @@ namespace Loly.Analysers
             }
             catch (FileNotFoundException)
             {
-                _log.Warn($"Unable to find {path}");
+                _log.LogWarning($"Unable to find {path}");
                 return null;
             }
         }
@@ -98,7 +103,7 @@ namespace Loly.Analysers
             }
             catch (FileNotFoundException)
             {
-                _log.Warn($"Unable to find {path}");
+                _log.LogWarning($"Unable to find {path}");
                 return null;
             }
         }

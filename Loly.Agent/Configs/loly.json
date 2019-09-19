@@ -1,6 +1,6 @@
 {
   "Kafka": {
-    "BootstrapServers" : "localhost:9094",
+    "BootstrapServers" : "kafka-zookeeper.home.yahsi.io:9092",
     "Consumer": {
       "GroupId" : "loly-agent"
     }
@@ -9,5 +9,8 @@
     "Discover": true,
     "AnalyseFile": true,
     "AnalyseFileHash": true
+  },
+  "Elasticsearch": {
+    "Uri" : "https://elk.home.yahsi.io:9200"
   }
 }
