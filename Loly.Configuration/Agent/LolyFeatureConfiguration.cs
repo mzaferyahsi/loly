@@ -1,6 +1,6 @@
 namespace Loly.Agent.Configuration
 {
-    public class LolyFeatureConfiguration
+    public class LolyAgentFeatureConfiguration
     {
         public bool Discover { get; set; }
         public bool AnalyseFile { get; set; }

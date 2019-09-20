@@ -1,15 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Confluent.Kafka;
-using log4net;
 using Loly.Agent.Configuration;
 using Loly.Agent.Kafka;
 using Loly.Analysers;
 using Loly.Analysers.Utility;
-using Loly.Kafka;
 using Loly.Kafka.Config;
 using Loly.Kafka.Consumer;
 using Loly.Kafka.Models;
@@ -17,7 +14,6 @@ using Loly.Kafka.Producer;
 using Loly.Kafka.Services;
 using Loly.Models;
 using Loly.Models.Messages;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -33,10 +29,10 @@ namespace Loly.Agent.Analysers
         private readonly IProducerService<string, FileMetaDataMessage> _producerService;
         private readonly IProducerQueue<string, FileMetaDataMessage> _producerQueue;
         private readonly IConfigProducer _configProducer;
-        private readonly LolyFeatureManager _featureManager;
+        private readonly LolyAgentFeatureManager _featureManager;
 
         public FileHashAnalyserHostedService(FileHashAnalyser analyser, IConsumerProvider consumerProvider,
-            IConfigProducer configProducer, LolyFeatureManager featureManager,
+            IConfigProducer configProducer, LolyAgentFeatureManager featureManager,
             ILogger<FileHashAnalyserHostedService> logger)
         {
             _featureManager = featureManager;

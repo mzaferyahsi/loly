@@ -2,14 +2,14 @@ using Microsoft.Extensions.Options;
 
 namespace Loly.Agent.Configuration
 {
-    public class LolyFeatureManager
+    public class LolyAgentFeatureManager
     {
-        private LolyFeatureConfiguration _configuration;
+        private LolyAgentFeatureConfiguration _configuration;
         
-        public LolyFeatureManager(IOptions<LolyFeatureConfiguration> configuration)
+        public LolyAgentFeatureManager(IOptions<LolyAgentFeatureConfiguration> configuration)
         {
             if (configuration == null || configuration.Value == null)
-                _configuration = new LolyFeatureConfiguration()
+                _configuration = new LolyAgentFeatureConfiguration()
                 {
                     Discover = true,
                     AnalyseFile = true,

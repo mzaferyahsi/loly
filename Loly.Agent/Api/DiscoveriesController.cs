@@ -1,5 +1,4 @@
 using System;
-using log4net;
 using Loly.Agent.Configuration;
 using Loly.Agent.Controllers;
 using Loly.Agent.Discovery;
@@ -18,9 +17,9 @@ namespace Loly.Agent.Api
     {
         private readonly IDiscoveryService _discoveryService;
         private readonly ILogger _log;
-        private LolyFeatureManager _featureManager;
+        private LolyAgentFeatureManager _featureManager;
 
-        public DiscoveriesController(IDiscoveryService service, LolyFeatureManager featureManager, ILogger<DiscoveriesController> logger)
+        public DiscoveriesController(IDiscoveryService service, LolyAgentFeatureManager featureManager, ILogger<DiscoveriesController> logger)
         {
             _log = logger;
             _discoveryService = service;

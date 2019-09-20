@@ -6,7 +6,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Confluent.Kafka;
-using log4net;
 using Loly.Agent.Discovery;
 using Loly.Agent.Kafka;
 using Loly.Analysers.Utility;
