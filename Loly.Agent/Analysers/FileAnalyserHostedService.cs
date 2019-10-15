@@ -3,14 +3,12 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Confluent.Kafka;
-using Loly.Agent.Configuration;
-using Loly.Agent.Kafka;
 using Loly.Analysers;
-using Loly.Kafka.Config;
-using Loly.Kafka.Consumer;
-using Loly.Kafka.Models;
-using Loly.Kafka.Producer;
-using Loly.Kafka.Services;
+using Loly.Configuration.Agent;
+using Loly.Streaming.Config;
+using Loly.Streaming.Consumer;
+using Loly.Streaming.Models;
+using Loly.Streaming.Producer;
 using Loly.Models;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -19,13 +17,13 @@ namespace Loly.Agent.Analysers
 {
     public class FileAnalyserHostedService : IHostedService
     {
-        private readonly ILogger _log;
+        private readonly ILogger _logger;
         private ConsumerService<Ignore, string> _consumerService;
         private CancellationToken _cancellationtoken;
         private readonly FileAnalyser _analyser;
         private readonly IConsumerProvider _consumerProvider;
-        private readonly IProducerService<string, FileInformation> _producerService;
-        private readonly IProducerQueue<string, FileInformation> _producerQueue;
+        private readonly IProducerService<string, FileMetaData> _producerService;
+        private readonly IProducerQueue<string, FileMetaData> _producerQueue;
         private readonly IConfigProducer _configProducer;
         private readonly LolyAgentFeatureManager _featureManager;
 
@@ -34,11 +32,11 @@ namespace Loly.Agent.Analysers
             ILogger<FileAnalyserHostedService> logger)
         {
             _featureManager = featureManager;
-            _log = logger;
+            _logger = logger;
             _analyser = analyser;
             _consumerProvider = consumerProvider;
             _configProducer = configProducer;
-            _producerService = new ProducerService<string, FileInformation>(_configProducer, _log);
+            _producerService = new ProducerService<string, FileMetaData>(_configProducer, _logger);
             _producerQueue = _producerService.Queue;
             InitializeConsumerService();
         }
@@ -50,63 +48,87 @@ namespace Loly.Agent.Analysers
             consumerConfig.EnableAutoCommit = false;
             
             _consumerService = new ConsumerService<Ignore, String>(_consumerProvider, consumerConfig, 
-                    new List<string>() {"loly-discovered"}, _log);
+                    new List<string>() {Constants.TopicDiscovered}, _logger);
 
             _consumerService.ConsumerError += ConsumerServiceOnConsumerError;
             _consumerService.ConsumeResult += ConsumerServiceOnConsumeResult;
         }
 
 
-        private void ConsumerServiceOnConsumeResult(object sender, ConsumerConsumeResultHandlerArgs<Ignore, string> args)
+        private void ConsumerServiceOnConsumeResult(object sender, ConsumeResultHandlerArgs<Ignore, string> args)
         {
             var consumer = args.Consumer;
             var cr = args.ConsumeResult;
             
             consumer.Pause(new List<TopicPartition>() {cr.TopicPartition});
-            _log.LogDebug($"Analysing file for {cr.Value}");
+            _logger.LogDebug($"Analysing file for {cr.Value}");
             var result = _analyser.Analyse(cr.Value);
             
             if (result != null)
             {
-                _producerQueue.Enqueue(new KafkaMessage<string, FileInformation>()
+                var fileMetadata = ToMetaData(result);
+                
+                _producerQueue.Enqueue(new StreamMessage<string, FileMetaData>()
                 {
-                    Message = new Message<string, FileInformation>()
+                    Message = new Message<string, FileMetaData>()
                     {
                         Key = cr.Value,
-                        Value = result
+                        Value = fileMetadata
                     },
-                    Topic = "loly-files"
+                    Topic = Constants.TopicFiles
                 });
             }
             else
             {
-                _log.LogDebug($"Cannot analyse file {cr.Value}");
+                _logger.LogDebug($"Cannot analyse file {cr.Value}");
             }
             
             consumer.Commit(cr);
             consumer.Resume(new List<TopicPartition>() {cr.TopicPartition});
         }
 
-        private void ConsumerServiceOnConsumerError(object sender, ConsumerErrorEventHandlerArgs<Ignore, string> args)
+        private void ConsumerServiceOnConsumerError(object sender, ErrorEventHandlerArgs<Ignore, string> args)
         {
-            var consumer = args.Consumer;
+//            var consumer = args.Consumer;
             var error = args.Error;
-            if (error.IsError)
+            if (error.IsFatal)
             {
+                _logger.LogCritical("Error on kafka consumer. {error}", error.Reason);
                 try
                 {
                     DeInitializeConsumerService();
                 }
                 catch (Exception e)
                 {
-                    _log.LogError(e, "Error when consuming message.");
+                    _logger.LogError(e, "Error when consuming message.");
                 }
                 finally
                 {
-                    _log.LogWarning("Re-Initializing Kafka Consumer");
+                    _logger.LogWarning("Re-Initializing Kafka Consumer");
                     InitializeConsumerService();
                 }
             }
+        }
+
+        private FileMetaData ToMetaData(IFile file)
+        {
+            var fileMetaData = new FileMetaData {Path = file.Path};
+
+            fileMetaData.MetaData.Add(Constants.FileExtension, file.Extension);
+            fileMetaData.MetaData.Add(Constants.FileName, file.Name);
+            fileMetaData.MetaData.Add(Constants.FileMimeType, file.MimeType);
+            fileMetaData.MetaData.Add(Constants.FileSize, file.Size.ToString());
+            fileMetaData.MetaData.Add(Constants.FileDateCreated, file.DateCreated.ToString(Constants.DatetimeFormat));
+            fileMetaData.MetaData.Add(Constants.FileDateModified, file.DateModified.ToString(Constants.DatetimeFormat));
+
+            foreach (var metadata in file.MetaData)
+            {
+                fileMetaData.MetaData.Add(metadata.Key, metadata.Value);
+            }
+
+            fileMetaData.Action = MetadataAction.Create;
+            
+            return fileMetaData;
         }
 
         private void DeInitializeConsumerService()

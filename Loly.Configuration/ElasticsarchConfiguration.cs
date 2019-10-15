@@ -1,4 +1,4 @@
-namespace Loly.Agent.Configuration
+namespace Loly.Configuration
 {
     public class ElasticsearchConfiguration
     {

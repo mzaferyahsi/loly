@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Options;
 
-namespace Loly.Agent.Configuration
+namespace Loly.Configuration.Agent
 {
     public class LolyAgentFeatureManager
     {
@@ -8,12 +8,13 @@ namespace Loly.Agent.Configuration
         
         public LolyAgentFeatureManager(IOptions<LolyAgentFeatureConfiguration> configuration)
         {
-            if (configuration == null || configuration.Value == null)
+            if (configuration?.Value == null)
                 _configuration = new LolyAgentFeatureConfiguration()
                 {
                     Discover = true,
                     AnalyseFile = true,
-                    AnalyseFileHash = true
+                    AnalyseFileHash = true,
+                    AnalyseImageMetadata = true
                 };
             else
                 _configuration = configuration.Value;
@@ -32,6 +33,11 @@ namespace Loly.Agent.Configuration
         public bool IsFileHashAnalyserEnabled()
         {
             return _configuration.AnalyseFileHash;
+        }
+
+        public bool IsImageMetadataAnalyserEnabled()
+        {
+            return _configuration.AnalyseImageMetadata;
         }
     }
 }

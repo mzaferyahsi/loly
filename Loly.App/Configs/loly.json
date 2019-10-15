@@ -1,0 +1,20 @@
+{
+  "Kafka": {
+    "BootstrapServers" : "localhost:9092",
+    "Consumer": {
+      "GroupId" : "loly-app-devel-20190920-1"
+    }
+  },
+  "Features": {
+  },
+  "Elasticsearch": {
+    "Uri" : "https://elk.home.yahsi.io:9200"
+  },
+  "ElasticApm":  {
+    "ServerUrls":  "https://elk.home.yahsi.io:8200",
+    "TransactionSampleRate": 1.0
+  },
+  "Db": {
+    "ConnectionString": "mongodb://localhost:27017"
+  }
+}

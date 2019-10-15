@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/core/sdk:2.2 AS build
+FROM mcr.microsoft.com/dotnet/core/sdk:3.0 AS build
 WORKDIR /app
 
 # copy csproj and restore as distinct layers
@@ -8,10 +8,12 @@ WORKDIR /app
 COPY ./*.sln ./
 COPY ./Loly.Models/*.csproj ./Loly.Models/
 RUN cd Loly.Models && dotnet clean && dotnet restore && cd ..
+COPY ./Loly.Configuration/*.csproj ./Loly.Configuration/
+RUN cd Loly.Configuration && dotnet clean && dotnet restore && cd ..
 COPY ./Loly.Analysers/*.csproj ./Loly.Analysers/
 RUN cd Loly.Analysers && dotnet clean && dotnet restore && cd ..
-COPY ./Loly.Kafka/*.csproj ./Loly.Kafka/
-RUN cd Loly.Kafka && dotnet clean && dotnet restore && cd ..
+COPY ./Loly.Streaming/*.csproj ./Loly.Streaming/
+RUN cd Loly.Streaming && dotnet clean && dotnet restore && cd ..
 COPY ./Loly.Agent/*.csproj ./Loly.Agent/
 RUN cd Loly.Agent && dotnet clean && dotnet restore && cd ..
 
@@ -20,7 +22,7 @@ COPY . ./
 RUN dotnet publish -c ReleaseAgent -o out
 
 
-FROM mcr.microsoft.com/dotnet/core/aspnet:2.2-bionic AS runtime
+FROM mcr.microsoft.com/dotnet/core/aspnet:3.0-bionic AS runtime
 WORKDIR /app
 COPY --from=build /app/Loly.Agent/out ./
 RUN mkdir /usr/share/ca-certificates/yahsi/

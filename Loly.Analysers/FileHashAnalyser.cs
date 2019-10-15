@@ -8,31 +8,31 @@ namespace Loly.Analysers
 {
     public class FileHashAnalyser : IAnalyser
     {
-        private readonly ILogger _log;
+        private readonly ILogger _logger;
 
         public FileHashAnalyser( ILogger<FileHashAnalyser> logger)
         {
-            this._log = logger;
+            this._logger = logger;
         }
 
         public async Task<string> Analyse(HashMethods method, string path)
         {
             switch (method)
             {
-                case HashMethods.SHA1:
-                    return await GenerateSHA1Hash(path);
+                case HashMethods.Sha1:
+                    return await GenerateSha1Hash(path);
                 case HashMethods.Md5:
                     return await GenerateMd5Hash(path);
-                case HashMethods.SHA256:
-                    return await GenerateSHA256Hash(path);
-                case HashMethods.SHA512:
-                    return await GenerateSHA512Hash(path);
+                case HashMethods.Sha256:
+                    return await GenerateSha256Hash(path);
+                case HashMethods.Sha512:
+                    return await GenerateSha512Hash(path);
                 default:
                     throw new ArgumentOutOfRangeException(nameof(method), method, "Hash method not supported.");
             }
         }
 
-        public async Task<string> GenerateSHA1Hash(string path)
+        public async Task<string> GenerateSha1Hash(string path)
         {
             try
             {
@@ -41,27 +41,27 @@ namespace Loly.Analysers
                 var fileAttr = File.GetAttributes(resolvedPath);
                 if ((fileAttr & FileAttributes.Directory) != 0) return string.Empty;
 
-                var hash = await FileHash.GetSHA1Hash(path);
+                var hash = await FileHash.GetSha1Hash(path);
                 return hash;
             }
             catch (FileNotFoundException)
             {
-                _log.LogWarning($"Unable to find {path}");
+                _logger.LogWarning($"Unable to find {path}");
                 return null;
             }
             catch (DirectoryNotFoundException)
             {
-                _log.LogWarning($"Unable to find {path}");
+                _logger.LogWarning($"Unable to find {path}");
                 return null;
             }
             catch (Exception e)
             {
-                _log.LogError(e, "Error when generating file hash");
+                _logger.LogError(e, "Error when generating file hash");
                 return null;
             }
         }
         
-        public async Task<string> GenerateSHA256Hash(string path)
+        public async Task<string> GenerateSha256Hash(string path)
         {
             try
             {
@@ -70,27 +70,27 @@ namespace Loly.Analysers
                 var fileAttr = File.GetAttributes(resolvedPath);
                 if ((fileAttr & FileAttributes.Directory) != 0) return string.Empty;
 
-                var hash = await FileHash.GetSHA256Hash(path);
+                var hash = await FileHash.GetSha256Hash(path);
                 return hash;
             }
             catch (FileNotFoundException)
             {
-                _log.LogWarning($"Unable to find {path}");
+                _logger.LogWarning($"Unable to find {path}");
                 return null;
             }
             catch (DirectoryNotFoundException)
             {
-                _log.LogWarning($"Unable to find {path}");
+                _logger.LogWarning($"Unable to find {path}");
                 return null;
             }
             catch (Exception e)
             {
-                _log.LogError(e, "Error when generating file hash");
+                _logger.LogError(e, "Error when generating file hash");
                 return null;
             }
         }
         
-        public async Task<string> GenerateSHA512Hash(string path)
+        public async Task<string> GenerateSha512Hash(string path)
         {
             try
             {
@@ -99,22 +99,22 @@ namespace Loly.Analysers
                 var fileAttr = File.GetAttributes(resolvedPath);
                 if ((fileAttr & FileAttributes.Directory) != 0) return string.Empty;
 
-                var hash = await FileHash.GetSHA512Hash(path);
+                var hash = await FileHash.GetSha512Hash(path);
                 return hash;
             }
             catch (FileNotFoundException)
             {
-                _log.LogWarning($"Unable to find {path}");
+                _logger.LogWarning($"Unable to find {path}");
                 return null;
             }
             catch (DirectoryNotFoundException)
             {
-                _log.LogWarning($"Unable to find {path}");
+                _logger.LogWarning($"Unable to find {path}");
                 return null;
             }
             catch (Exception e)
             {
-                _log.LogError(e, "Error when generating file hash");
+                _logger.LogError(e, "Error when generating file hash");
                 return null;
             }
         }
@@ -128,22 +128,22 @@ namespace Loly.Analysers
                 var fileAttr = File.GetAttributes(resolvedPath);
                 if ((fileAttr & FileAttributes.Directory) != 0) return string.Empty;
 
-                var hash = await FileHash.GetMD5Hash(path);
+                var hash = await FileHash.GetMd5Hash(path);
                 return hash;
             }
             catch (FileNotFoundException)
             {
-                _log.LogWarning($"Unable to find {path}");
+                _logger.LogWarning($"Unable to find {path}");
                 return null;
             }
             catch (DirectoryNotFoundException)
             {
-                _log.LogWarning($"Unable to find {path}");
+                _logger.LogWarning($"Unable to find {path}");
                 return null;
             }
             catch (Exception e)
             {
-                _log.LogError(e, "Error when generating file hash");
+                _logger.LogError(e, "Error when generating file hash");
                 return null;
             }
         }

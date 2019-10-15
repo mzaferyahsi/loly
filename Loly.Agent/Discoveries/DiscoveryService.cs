@@ -6,12 +6,10 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Confluent.Kafka;
-using Loly.Agent.Discovery;
-using Loly.Agent.Kafka;
 using Loly.Analysers.Utility;
-using Loly.Kafka.Config;
-using Loly.Kafka.Models;
-using Loly.Kafka.Producer;
+using Loly.Streaming.Config;
+using Loly.Streaming.Models;
+using Loly.Streaming.Producer;
 using Microsoft.Extensions.Logging;
 
 namespace Loly.Agent.Discoveries
@@ -20,12 +18,12 @@ namespace Loly.Agent.Discoveries
     {
         private readonly IProducerService<string, string> _kafkaProducerService;
         private readonly IProducerQueue<string, string> _kafkaProducerQueue;
-        private readonly ILogger _log;
+        private readonly ILogger _logger;
 
         public DiscoveryService(IConfigProducer configProducer, ILogger<DiscoveryService> logger)
         {
-            _log = logger;
-            _kafkaProducerService = new ProducerService<string, string>(configProducer, _log);
+            _logger = logger;
+            _kafkaProducerService = new ProducerService<string, string>(configProducer, _logger);
             _kafkaProducerQueue = _kafkaProducerService.Queue;
             _kafkaProducerService.Start(CancellationToken.None);
         }
@@ -64,7 +62,7 @@ namespace Loly.Agent.Discoveries
                     var shouldExclude = Regex.IsMatch(fullPath, exclusion, RegexOptions.IgnoreCase);
                     if (shouldExclude)
                     {
-                        _log.LogDebug($"Skipping ${fullPath} because it matches ${exclusion} as exclusion filter.");
+                        _logger.LogDebug($"Skipping ${fullPath} because it matches ${exclusion} as exclusion filter.");
                         return;
                     }
                 }
@@ -78,7 +76,7 @@ namespace Loly.Agent.Discoveries
             }
             catch (FileNotFoundException)
             {
-                _log.LogWarning($"{path} not found.");
+                _logger.LogWarning($"{path} not found.");
             }
         }
 
@@ -106,7 +104,7 @@ namespace Loly.Agent.Discoveries
 
         private void QueueMessage(string path)
         {
-            var message = new KafkaMessage<string, string>
+            var message = new StreamMessage<string, string>
             {
                 Topic = "loly-discovered",
                 Message = new Message<string, string>()
@@ -130,7 +128,7 @@ namespace Loly.Agent.Discoveries
                     var shouldExclude = Regex.IsMatch(path, exclusion, RegexOptions.IgnoreCase);
                     if (shouldExclude)
                     {
-                        _log.LogDebug($"Skipping ${path} because it matches ${exclusion} as exclusion filter.");
+                        _logger.LogDebug($"Skipping ${path} because it matches ${exclusion} as exclusion filter.");
                         return;
                     }
                 }
@@ -146,11 +144,11 @@ namespace Loly.Agent.Discoveries
             }
             catch (UnauthorizedAccessException e)
             {
-                _log.LogWarning(e, $"Unable to access {path} due to authorization error");
+                _logger.LogWarning(e, $"Unable to access {path} due to authorization error");
             }
             catch (Exception e)
             {
-                _log.LogError($"Unable to discover directory {path}", e);
+                _logger.LogError($"Unable to discover directory {path}", e);
             }
         }
     }
