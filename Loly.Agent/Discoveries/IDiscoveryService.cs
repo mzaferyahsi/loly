@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Loly.Agent.Services;
 
-namespace Loly.Agent.Discovery
+namespace Loly.Agent.Discoveries
 {
     public interface IDiscoveryService : IService
     {

@@ -1,44 +1,43 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Confluent.Kafka;
-using log4net;
-using Loly.Agent.Kafka;
 using Loly.Analysers;
 using Loly.Analysers.Utility;
-using Loly.Kafka;
-using Loly.Kafka.Config;
-using Loly.Kafka.Consumer;
-using Loly.Kafka.Models;
-using Loly.Kafka.Producer;
-using Loly.Kafka.Services;
+using Loly.Configuration.Agent;
+using Loly.Streaming.Config;
+using Loly.Streaming.Consumer;
+using Loly.Streaming.Models;
+using Loly.Streaming.Producer;
 using Loly.Models;
-using Loly.Models.Messages;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace Loly.Agent.Analysers
 {
     public class FileHashAnalyserHostedService : IHostedService
     {
-        private static ILog _log = LogManager.GetLogger(typeof(FileHashAnalyserHostedService));
+        private static ILogger _logger;
         private CancellationToken _cancellationtoken;
-        private ConsumerService<string, FileInformation> _consumerService;
+        private ConsumerService<string, FileMetaData> _consumerService;
         private readonly FileHashAnalyser _analyser;
         private readonly IConsumerProvider _consumerProvider;
-        private readonly IProducerService<string, FileMetaDataMessage> _producerService;
-        private readonly IProducerQueue<string, FileMetaDataMessage> _producerQueue;
+        private readonly IProducerService<string, FileMetaData> _producerService;
+        private readonly IProducerQueue<string, FileMetaData> _producerQueue;
         private readonly IConfigProducer _configProducer;
+        private readonly LolyAgentFeatureManager _featureManager;
 
         public FileHashAnalyserHostedService(FileHashAnalyser analyser, IConsumerProvider consumerProvider,
-            IConfigProducer configProducer)
+            IConfigProducer configProducer, LolyAgentFeatureManager featureManager,
+            ILogger<FileHashAnalyserHostedService> logger)
         {
+            _featureManager = featureManager;
+            _logger = logger;
             _analyser = analyser;
             _consumerProvider = consumerProvider;
             _configProducer = configProducer;
-            _producerService = new ProducerService<string, FileMetaDataMessage>(configProducer, _log);
+            _producerService = new ProducerService<string, FileMetaData>(configProducer, _logger);
             _producerQueue = _producerService.Queue;
             InitializeConsumerService();
         }
@@ -49,70 +48,78 @@ namespace Loly.Agent.Analysers
             consumerConfig.GroupId += "-file_hash_analyser";
             consumerConfig.EnableAutoCommit = false;
             
-            _consumerService = new ConsumerService<string, FileInformation>(_consumerProvider, consumerConfig, 
-                    new List<string>() {"loly-files"}, _log);
+            _consumerService = new ConsumerService<string, FileMetaData>(_consumerProvider, consumerConfig, 
+                    new List<string>() {Constants.TopicFiles}, _logger);
 
             _consumerService.ConsumerError += ConsumerServiceOnConsumerError;
             _consumerService.ConsumeResult += ConsumerServiceOnConsumeResult;
         }
 
 
-        private async void ConsumerServiceOnConsumeResult(object sender, ConsumerConsumeResultHandlerArgs<string, FileInformation> args)
+        private async void ConsumerServiceOnConsumeResult(object sender, ConsumeResultHandlerArgs<string, FileMetaData> args)
         {
             var consumer = args.Consumer;
-            var cr = args.ConsumeResult;
-            HandleMessage(consumer, cr);
-        }
-
-        private async void HandleMessage(IConsumer<string, FileInformation> consumer,
-            ConsumeResult<string, FileInformation> consumeResult)
-        {
-            consumer.Pause(new List<TopicPartition>() {consumeResult.TopicPartition});
-            var result = await _analyser.Analyse(HashMethods.SHA512, consumeResult.Value.Path);
+            var consumeResult = args.ConsumeResult;
             
-            if (!string.IsNullOrEmpty(result))
+            consumer.Pause(new List<TopicPartition>() {consumeResult.TopicPartition});
+            _logger.LogDebug($"Analysing file hash for {consumeResult.Value.Path}");
+
+            if (consumeResult.Value.Action != MetadataAction.Delete &&
+                consumeResult.Value.MetaData.ContainsKey(Constants.FileSize))
             {
-                var msg = new FileMetaDataMessage()
+                var result = await _analyser.Analyse(HashMethods.Sha512, consumeResult.Value.Path);
+            
+                if (!string.IsNullOrEmpty(result))
                 {
-                    Path = consumeResult.Value.Path,
-                    MetaData = new Dictionary<string, string>()
+                    var msg = new FileMetaData()
                     {
-                        {"hash", result}
-                    }
-                };
+                        Path = consumeResult.Value.Path,
+                        MetaData = new Dictionary<string, string>()
+                        {
+                            {Constants.MetadataKeyHash, result}
+                        },
+                        Action = MetadataAction.Update
+                    };
                 
-                _producerQueue.Enqueue(new KafkaMessage<string, FileMetaDataMessage>()
-                {
-                    Message = new Message<string, FileMetaDataMessage>()
+                    _producerQueue.Enqueue(new StreamMessage<string, FileMetaData>()
                     {
-                        Key = consumeResult.Value.Path,
-                        Value = msg
-                    },
-                    Topic = "loly-file-metadatas"
-                });
+                        Message = new Message<string, FileMetaData>()
+                        {
+                            Key = consumeResult.Value.Path,
+                            Value = msg
+                        },
+                        Topic = Constants.TopicFiles
+                    });
+                }
+                else
+                {
+                    _logger.LogDebug($"File has generation is not possible for ${consumeResult.Value.Path}");
+                }
+                
             }
             
             consumer.Commit(consumeResult);
             consumer.Resume(new List<TopicPartition>() {consumeResult.TopicPartition});
         }
-
-        private void ConsumerServiceOnConsumerError(object sender, ConsumerErrorEventHandlerArgs<string, FileInformation> args)
+        
+        private void ConsumerServiceOnConsumerError(object sender, ErrorEventHandlerArgs<string, FileMetaData> args)
         {
-            var consumer = args.Consumer;
+//            var consumer = args.Consumer;
             var error = args.Error;
-            if (error.IsError)
+            if (error.IsFatal)
             {
+                _logger.LogCritical("Error on kafka consumer. {error}", error.Reason);
                 try
                 {
                     DeInitializeConsumerService();
                 }
                 catch (Exception e)
                 {
-                    _log.Error(e);
+                    _logger.LogError(e, "Error on consuming message.");
                 }
                 finally
                 {
-                    _log.Warn("Re-Initializing Kafka Consumer");
+                    _logger.LogWarning("Re-Initializing Kafka Consumer");
                     InitializeConsumerService();
                 }
             }
@@ -126,15 +133,19 @@ namespace Loly.Agent.Analysers
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            _cancellationtoken = cancellationToken;
-            _producerService.Start(_cancellationtoken);
-            _consumerService.Consume();
+            if (_featureManager.IsFileHashAnalyserEnabled())
+            {
+                _cancellationtoken = cancellationToken;
+                _producerService.Start(_cancellationtoken);
+                _consumerService.Consume();
+            }
             return Task.CompletedTask;
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            DeInitializeConsumerService();
+            if (_featureManager.IsFileHashAnalyserEnabled())
+                DeInitializeConsumerService();
             return Task.CompletedTask;
         }
     }

@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/core/sdk:2.2 AS build
+FROM mcr.microsoft.com/dotnet/core/sdk:3.0 AS build
 WORKDIR /app
 
 # copy csproj and restore as distinct layers
@@ -8,10 +8,12 @@ WORKDIR /app
 COPY ./*.sln ./
 COPY ./Loly.Models/*.csproj ./Loly.Models/
 RUN cd Loly.Models && dotnet clean && dotnet restore && cd ..
+COPY ./Loly.Configuration/*.csproj ./Loly.Configuration/
+RUN cd Loly.Configuration && dotnet clean && dotnet restore && cd ..
 COPY ./Loly.Analysers/*.csproj ./Loly.Analysers/
 RUN cd Loly.Analysers && dotnet clean && dotnet restore && cd ..
-COPY ./Loly.Kafka/*.csproj ./Loly.Kafka/
-RUN cd Loly.Kafka && dotnet clean && dotnet restore && cd ..
+COPY ./Loly.Streaming/*.csproj ./Loly.Streaming/
+RUN cd Loly.Streaming && dotnet clean && dotnet restore && cd ..
 COPY ./Loly.Agent/*.csproj ./Loly.Agent/
 RUN cd Loly.Agent && dotnet clean && dotnet restore && cd ..
 
@@ -20,12 +22,19 @@ COPY . ./
 RUN dotnet publish -c ReleaseAgent -o out
 
 
-FROM mcr.microsoft.com/dotnet/core/aspnet:2.2 AS runtime
+FROM mcr.microsoft.com/dotnet/core/aspnet:3.0-bionic AS runtime
 WORKDIR /app
 COPY --from=build /app/Loly.Agent/out ./
+RUN mkdir /usr/share/ca-certificates/yahsi/
+COPY Docker/yahsi-root-ca.crt  /usr/share/ca-certificates/yahsi/yahsi-root-ca.crt
+RUN echo "yahsi/yahsi-root-ca.crt" >> /etc/ca-certificates.conf
+COPY Docker/yahsi-tls-ca.crt  /usr/share/ca-certificates/yahsi/yahsi-tls-ca.crt
+RUN echo "yahsi/yahsi-tls-ca.crt" >> /etc/ca-certificates.conf
+RUN update-ca-certificates
 RUN rm ./*.Development.json
-# RUN apt-get update && apt-get install apt-utils -y && apt-get install libmagic1 -y
-#RUN apt-get update && apt-get install htop -y
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install apt-utils -yq --no-install-recommends
+#RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install htop -yq
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install iputils-ping -yq --no-install-recommends
 ENV IS_DOCKER=true
 
 VOLUME [ "/app/Configs" ]

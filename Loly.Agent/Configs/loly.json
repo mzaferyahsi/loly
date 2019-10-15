@@ -1,6 +1,6 @@
 {
   "Kafka": {
-    "BootstrapServers" : "localhost:9094",
+    "BootstrapServers" : "localhost:9092",
     "Consumer": {
       "GroupId" : "loly-agent"
     }
@@ -8,6 +8,14 @@
   "Features": {
     "Discover": true,
     "AnalyseFile": true,
-    "AnalyseFileHash": true
+    "AnalyseFileHash": true,
+    "AnalyseImageMetadata": true
+  },
+  "Elasticsearch": {
+    "Uri" : "https://elk.home.yahsi.io:9200"
+  },
+  "ElasticApm":  {
+    "ServerUrls":  "https://elk.home.yahsi.io:8200",
+    "TransactionSampleRate": 1.0
   }
 }

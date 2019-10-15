@@ -1,21 +1,26 @@
 using System;
 using System.IO;
 using HeyRed.Mime;
-using log4net;
-using Loly.Models;
+using Microsoft.Extensions.Logging;
+using File = Loly.Models.File;
 
 namespace Loly.Analysers
 {
     public class FileAnalyser : IAnalyser
     {
-        private readonly ILog _log = LogManager.GetLogger(typeof(FileAnalyser));
+        private readonly ILogger _logger;
 
-        public FileInformation Analyse(string path)
+        public FileAnalyser(ILogger<FileAnalyser> logger)
+        {
+            _logger = logger;
+        }
+
+        public File Analyse(string path)
         {
             try
             {
                 path = path.Trim('\"');
-                var fileAttr = File.GetAttributes(path);
+                var fileAttr = System.IO.File.GetAttributes(path);
 
                 var information = (fileAttr & FileAttributes.Directory) != 0
                     ? GetDirectoryInformation(Path.GetFullPath(path))
@@ -25,22 +30,22 @@ namespace Loly.Analysers
             }
             catch (FileNotFoundException)
             {
-                _log.Warn($"Unable to find {path}");
+                _logger.LogWarning($"Unable to find {path}");
                 return null;
             }
             catch (DirectoryNotFoundException)
             {
-                _log.Warn($"Unable to find {path}");
+                _logger.LogWarning($"Unable to find {path}");
                 return null;
             }
             catch (Exception e)
             {
-                _log.Error(e);
+                _logger.LogError(e, "Error when analysing file.");
                 return null;
             }
         }
 
-        private FileInformation GetDirectoryInformation(string path)
+        private File GetDirectoryInformation(string path)
         {
             try
             {
@@ -51,12 +56,12 @@ namespace Loly.Analysers
 
                 var mimeType = MimeGuesser.GuessMimeType(path);
 
-                var fileInfo = new FileInformation
+                var fileInfo = new File
                 {
                     Name = fsFileInfo.Name,
                     Extension = fsFileInfo.Extension,
-                    CratedDate = fsFileInfo.CreationTimeUtc,
-                    ModifiedDate = fsFileInfo.LastWriteTimeUtc,
+                    DateCreated = fsFileInfo.CreationTimeUtc,
+                    DateModified = fsFileInfo.LastWriteTimeUtc,
                     Size = -1,
                     Path = path,
                     MimeType = mimeType
@@ -66,12 +71,12 @@ namespace Loly.Analysers
             }
             catch (FileNotFoundException)
             {
-                _log.Warn($"Unable to find {path}");
+                _logger.LogWarning($"Unable to find {path}");
                 return null;
             }
         }
 
-        private FileInformation GetFileInformation(string path)
+        private File GetFileInformation(string path)
         {
             try
             {
@@ -83,12 +88,12 @@ namespace Loly.Analysers
                 var mimeType = MimeGuesser.GuessMimeType(path);
 
 
-                var fileInfo = new FileInformation
+                var fileInfo = new File
                 {
                     Name = fsFileInfo.Name,
                     Extension = fsFileInfo.Extension,
-                    CratedDate = fsFileInfo.CreationTimeUtc,
-                    ModifiedDate = fsFileInfo.LastWriteTimeUtc,
+                    DateCreated = fsFileInfo.CreationTimeUtc,
+                    DateModified = fsFileInfo.LastWriteTimeUtc,
                     Size = fsFileInfo.Length,
                     Path = path,
                     MimeType = mimeType
@@ -98,7 +103,7 @@ namespace Loly.Analysers
             }
             catch (FileNotFoundException)
             {
-                _log.Warn($"Unable to find {path}");
+                _logger.LogWarning($"Unable to find {path}");
                 return null;
             }
         }
